@@ -1,0 +1,25 @@
+# FastAPI and web server
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Authentication and security
+PyJWT==2.8.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+
+# Form handling
+python-multipart==0.0.6
+
+# Email validation
+email-validator==2.1.0
+
+# Database - MySQL
+mysql-connector-python==8.2.0
+pymysql==1.1.0
+
+# Optional: SQLAlchemy for more advanced features
+# sqlalchemy==2.0.23
+# alembic==1.12.1
