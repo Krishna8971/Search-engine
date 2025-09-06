@@ -54,9 +54,8 @@ const Header = () => {
         <nav className="header-desktop-nav">
           <div className="flex items-center" style={{ gap: 'var(--spacing-lg)' }}>
             <NavLink to="/" style={navLinkStyle} end>Home</NavLink>
-            <NavLink to="/about" style={navLinkStyle}>About</NavLink>
+            <NavLink to="/about" style={navLinkStyle}>About Us</NavLink>
             <NavLink to="/shop" style={navLinkStyle}>Shop</NavLink>
-            <NavLink to="/contact" style={navLinkStyle}>Contact Us</NavLink>
           </div>
         </nav>
 
@@ -111,9 +110,8 @@ const Header = () => {
           <div className="container" style={{ padding: 'var(--spacing-md) 0' }}>
             <div className="flex flex-col" style={{ gap: 'var(--spacing-sm)' }}>
               <NavLink onClick={() => setMobileOpen(false)} to="/" style={navLinkStyle} end>Home</NavLink>
-              <NavLink onClick={() => setMobileOpen(false)} to="/about" style={navLinkStyle}>About</NavLink>
+              <NavLink onClick={() => setMobileOpen(false)} to="/about" style={navLinkStyle}>About Us</NavLink>
               <NavLink onClick={() => setMobileOpen(false)} to="/shop" style={navLinkStyle}>Shop</NavLink>
-              <NavLink onClick={() => setMobileOpen(false)} to="/contact" style={navLinkStyle}>Contact Us</NavLink>
               {isAuthenticated ? (
                 <>
                   <NavLink onClick={() => setMobileOpen(false)} to="/dashboard" style={navLinkStyle}>Dashboard</NavLink>

@@ -6,7 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Shop from './pages/Shop';
 import Cart from './pages/Cart';
-import Contact from './pages/Contact';
+import About from './pages/About';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './styles/global.css';
@@ -41,7 +41,7 @@ const AppRoutes = () => {
       } />
       <Route path="/shop" element={<Shop />} />
       <Route path="/cart" element={<Cart />} />
-      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
