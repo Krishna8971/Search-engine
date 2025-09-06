@@ -92,10 +92,10 @@ const Login = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
   <Header />
-      <div className="auth-container">
+      <div className="auth-container theme-login">
         <div className="auth-card">
         <div className="auth-header">
-          <h1 className="auth-title">Welcome Back to SecondMarket</h1>
+          <h1 className="auth-title">Welcome Back to EcoFinds</h1>
           <p className="auth-subtitle">Sign in to your account to start buying and selling</p>
         </div>
 
@@ -138,6 +138,16 @@ const Login = () => {
               disabled={loading}
             />
             {errors.password && <span className="error-message">{errors.password}</span>}
+            <div className="form-aux">
+              <button
+                type="button"
+                className="auth-link auth-link-inline"
+                onClick={() => navigate('/forgot-password')}
+                disabled={loading}
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           <button
@@ -160,7 +170,7 @@ const Login = () => {
           <p>Don't have an account?</p>
           <button
             type="button"
-            className="auth-link"
+            className="auth-link auth-link-inline"
             onClick={() => navigate('/register')}
             disabled={loading}
           >

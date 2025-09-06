@@ -19,6 +19,21 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
+  const getPasswordStrengthScore = (password) => {
+    if (!password) return { score: 0, percent: 0, label: 'Too short' };
+    const hasMinLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(password);
+    const hasNoSpaces = !/\s/.test(password);
+    let score = [hasMinLength, hasUpper, hasLower, hasSymbol, hasNoSpaces].filter(Boolean).length;
+    if (password.length >= 12) score += 1;
+    if (score > 5) score = 5;
+    const percentMap = [0, 20, 40, 60, 80, 100];
+    const labelMap = ['Too short', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'];
+    return { score, percent: percentMap[score], label: labelMap[score] };
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -32,6 +47,15 @@ const Register = () => {
         [name]: ''
       }));
     }
+  };
+
+  const validatePasswordStrength = (password) => {
+    const hasMinLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(password);
+    const hasNoSpaces = !/\s/.test(password);
+    return hasMinLength && hasUpper && hasLower && hasSymbol && hasNoSpaces;
   };
 
   const validateForm = () => {
@@ -51,8 +75,8 @@ const Register = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (!validatePasswordStrength(formData.password)) {
+      newErrors.password = 'Use 8+ chars, 1 upper, 1 lower, 1 symbol, no spaces';
     }
 
     if (!formData.confirmPassword) {
@@ -118,10 +142,10 @@ const Register = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
   <Header />
-      <div className="auth-container">
-        <div className="auth-card">
+      <div className="auth-container theme-login">
+        <div className="auth-card auth-card-wide">
         <div className="auth-header">
-          <h1 className="auth-title">Join SecondMarket</h1>
+          <h1 className="auth-title">Create your EcoFinds Account</h1>
           <p className="auth-subtitle">Create your account to start buying and selling second-hand items</p>
         </div>
 
@@ -180,7 +204,18 @@ const Register = () => {
               onChange={handleChange}
               disabled={loading}
             />
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            {(() => { const s = getPasswordStrengthScore(formData.password); return (
+              <div className="strength-meter" aria-live="polite">
+                <div className={`strength-bar strength-${s.score}`}>
+                  <div className="strength-bar-fill" style={{ width: `${s.percent}%` }}></div>
+                </div>
+                <div className="strength-label">{s.label}</div>
+              </div>
+            ); })()}
+            <div className="password-helper">
+              Use 8+ characters with a mix of uppercase, lowercase, and a symbol. No spaces.
+            </div>
+            {errors.password && <div className="error-chip" role="alert">{errors.password}</div>}
           </div>
 
           <div className="form-group">
@@ -197,7 +232,7 @@ const Register = () => {
               onChange={handleChange}
               disabled={loading}
             />
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && <div className="error-chip" role="alert">{errors.confirmPassword}</div>}
           </div>
 
           <button
@@ -220,7 +255,7 @@ const Register = () => {
           <p>Already have an account?</p>
           <button
             type="button"
-            className="auth-link"
+            className="auth-link auth-link-inline"
             onClick={() => navigate('/login')}
             disabled={loading}
           >
