@@ -94,7 +94,7 @@ const Cart = () => {
   // Handle checkout
   const handleCheckout = () => {
     if (cartItemsCount === 0) return;
-    showNotification('Checkout functionality coming soon!', 'info');
+    navigate('/checkout');
   };
 
   // Redirect to login if not authenticated

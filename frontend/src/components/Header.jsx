@@ -101,6 +101,58 @@ const Header = () => {
               </span>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={toggleMobile}
+            className="mobile-menu-button"
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 'var(--spacing-sm)',
+              borderRadius: 'var(--radius-sm)',
+              transition: 'background-color 0.2s ease'
+            }}
+            aria-label="Toggle mobile menu"
+          >
+            <div style={{
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-around'
+            }}>
+              <span style={{
+                display: 'block',
+                height: '2px',
+                width: '100%',
+                backgroundColor: 'var(--text-primary)',
+                borderRadius: '1px',
+                transition: 'all 0.3s ease',
+                transform: mobileOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none'
+              }}></span>
+              <span style={{
+                display: 'block',
+                height: '2px',
+                width: '100%',
+                backgroundColor: 'var(--text-primary)',
+                borderRadius: '1px',
+                transition: 'all 0.3s ease',
+                opacity: mobileOpen ? '0' : '1'
+              }}></span>
+              <span style={{
+                display: 'block',
+                height: '2px',
+                width: '100%',
+                backgroundColor: 'var(--text-primary)',
+                borderRadius: '1px',
+                transition: 'all 0.3s ease',
+                transform: mobileOpen ? 'rotate(-45deg) translate(7px, -6px)' : 'none'
+              }}></span>
+            </div>
+          </button>
         </div>
       </div>
 

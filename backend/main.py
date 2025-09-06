@@ -11,6 +11,7 @@ import os
 from typing import Optional
 from dotenv import load_dotenv
 from dashboard import router as dashboard_router
+from checkout import router as checkout_router
 
 load_dotenv()
 
@@ -24,8 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include dashboard router
+# Include routers
 app.include_router(dashboard_router)
+app.include_router(checkout_router)
 
 SECRET_KEY = os.getenv('SECRET_KEY',)
 ALGORITHM = "HS256"

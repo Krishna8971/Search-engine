@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Shop from './pages/Shop';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import About from './pages/About';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -41,6 +42,11 @@ const AppRoutes = () => {
       } />
       <Route path="/shop" element={<Shop />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={
+        <ProtectedRoute>
+          <Checkout />
+        </ProtectedRoute>
+      } />
       <Route path="/about" element={<About />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
