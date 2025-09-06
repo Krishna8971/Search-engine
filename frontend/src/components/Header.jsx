@@ -32,62 +32,51 @@ const Header = () => {
       padding: 'var(--spacing-md) 0'
     }}>
       <div className="container flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
-          <div className="flex items-center justify-center" style={{
-            width: '32px',
-            height: '32px',
-            backgroundColor: 'var(--primary-color)',
-            borderRadius: 'var(--radius-md)',
-            marginRight: 'var(--spacing-sm)'
-          }}>
-            <span className="text-white font-bold" style={{ fontSize: 'var(--font-size-lg)' }}>S</span>
-          </div>
-          <span className="text-primary font-bold" style={{ 
-            fontSize: 'var(--font-size-xl)'
-          }}>
-            SecondMarket
+        
+        {/* Logo + Company Name */}
+        <NavLink to="/" style={{ textDecoration: "none" }} className="flex items-center gap-2">
+          <img 
+            src="/logo512.png" 
+            alt="Ecofinds Logo" 
+            style={{ width: "60px", height: "60px" }} 
+          />
+          <span
+            className="text-primary font-bold"
+            style={{ fontSize: 'var(--font-size-xl)' }}
+          >
+            EcoFinds
           </span>
-        </Link>
+        </NavLink>
 
         {/* Desktop Nav */}
         <nav className="header-desktop-nav">
           <div className="flex items-center" style={{ gap: 'var(--spacing-lg)' }}>
             <NavLink to="/" style={navLinkStyle} end>Home</NavLink>
+            <NavLink to="/about" style={navLinkStyle}>About</NavLink>
             <NavLink to="/shop" style={navLinkStyle}>Shop</NavLink>
-            <NavLink to="/cart" style={navLinkStyle}>Cart</NavLink>
-            <NavLink to="/contact" style={navLinkStyle}>Contact</NavLink>
+            <NavLink to="/contact" style={navLinkStyle}>Contact Us</NavLink>
           </div>
         </nav>
 
-        {/* Actions */}
+        {/* Actions (Profile, Cart, Search) */}
         <div className="flex items-center" style={{ gap: 'var(--spacing-md)' }}>
-          {isAuthenticated ? (
-            <>
-              <span className="text-secondary text-sm hidden sm:block" style={{ 
-                maxWidth: 120, 
-                whiteSpace: 'nowrap', 
-                textOverflow: 'ellipsis', 
-                overflow: 'hidden' 
-              }}>
-                {user?.name || 'User'}
-              </span>
-              <button onClick={() => navigate('/dashboard')} className="btn btn-primary btn-sm header-desktop-action">Dashboard</button>
-              <button onClick={handleLogout} className="btn btn-secondary btn-sm header-desktop-action">Logout</button>
-            </>
-          ) : (
-            <button onClick={() => navigate('/login')} className="btn btn-primary btn-sm header-desktop-action">Login</button>
-          )}
+          {/* Profile */}
+          <div onClick={() => navigate(isAuthenticated ? "/dashboard" : "/login")} style={{ cursor: "pointer" }}>
+            👤
+          </div>
+
+          {/* Cart */}
+          <div onClick={() => navigate("/cart")} style={{ cursor: "pointer" }}>
+            🛒
+          </div>
+
+          {/* Search Button */}
           <button 
-            aria-label="Menu" 
-            onClick={toggleMobile} 
-            className="mobile-menu-button btn btn-secondary"
+            aria-label="Search" 
+            className="btn btn-secondary"
             style={{ padding: '0.5rem' }}
           >
-            <span style={{ width: 18, height: 2, background: 'var(--text-primary)', position: 'relative', display: 'block' }}>
-              <span style={{ position: 'absolute', top: -6, left: 0, width: 18, height: 2, background: 'var(--text-primary)' }}></span>
-              <span style={{ position: 'absolute', top: 6, left: 0, width: 18, height: 2, background: 'var(--text-primary)' }}></span>
-            </span>
+            🔍
           </button>
         </div>
       </div>
@@ -98,9 +87,9 @@ const Header = () => {
           <div className="container" style={{ padding: 'var(--spacing-md) 0' }}>
             <div className="flex flex-col" style={{ gap: 'var(--spacing-sm)' }}>
               <NavLink onClick={() => setMobileOpen(false)} to="/" style={navLinkStyle} end>Home</NavLink>
+              <NavLink onClick={() => setMobileOpen(false)} to="/about" style={navLinkStyle}>About</NavLink>
               <NavLink onClick={() => setMobileOpen(false)} to="/shop" style={navLinkStyle}>Shop</NavLink>
-              <NavLink onClick={() => setMobileOpen(false)} to="/cart" style={navLinkStyle}>Cart</NavLink>
-              <NavLink onClick={() => setMobileOpen(false)} to="/contact" style={navLinkStyle}>Contact</NavLink>
+              <NavLink onClick={() => setMobileOpen(false)} to="/contact" style={navLinkStyle}>Contact Us</NavLink>
               {isAuthenticated ? (
                 <>
                   <NavLink onClick={() => setMobileOpen(false)} to="/dashboard" style={navLinkStyle}>Dashboard</NavLink>
@@ -118,3 +107,4 @@ const Header = () => {
 };
 
 export default Header;
+
