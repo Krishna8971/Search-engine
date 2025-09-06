@@ -127,7 +127,7 @@ const Register = () => {
         confirmPassword: ''
       });
 
-      // Navigate to login page after successful registration
+      
       setTimeout(() => {
         navigate('/login');
       }, 2000);

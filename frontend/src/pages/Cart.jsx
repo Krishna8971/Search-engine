@@ -23,13 +23,13 @@ const Cart = () => {
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [notification, setNotification] = useState(null);
 
-  // Show notification
+
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Handle quantity update
+
   const handleQuantityUpdate = async (productId, newQuantity) => {
     if (newQuantity < 0) return;
     
@@ -53,7 +53,7 @@ const Cart = () => {
     }
   };
 
-  // Handle remove item
+ 
   const handleRemoveItem = async (productId) => {
     setUpdatingItems(prev => new Set([...prev, productId]));
     
@@ -75,7 +75,7 @@ const Cart = () => {
     }
   };
 
-  // Handle clear cart
+ 
   const handleClearCart = async () => {
     if (window.confirm('Are you sure you want to clear your cart?')) {
       try {
@@ -91,19 +91,19 @@ const Cart = () => {
     }
   };
 
-  // Handle checkout
+ 
   const handleCheckout = () => {
     if (cartItemsCount === 0) return;
     navigate('/checkout');
   };
 
-  // Redirect to login if not authenticated
+
   if (!isAuthenticated) {
     navigate('/login');
     return null;
   }
 
-  // Loading state
+
   if (loading && cartItems.length === 0) {
     return (
       <div className="cart-container">

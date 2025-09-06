@@ -37,13 +37,12 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  // Show notification
+  
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -52,7 +51,7 @@ const Checkout = () => {
     }));
   };
 
-  // Handle form submission
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -101,10 +100,10 @@ const Checkout = () => {
         const result = await response.json();
         showNotification('Order placed successfully!', 'success');
         
-        // Clear cart after successful checkout
+        
         await clearCart();
         
-        // Redirect to home page after a short delay
+        
         setTimeout(() => {
           navigate('/');
         }, 2000);
@@ -120,13 +119,13 @@ const Checkout = () => {
     }
   };
 
-  // Redirect to login if not authenticated
+  
   if (!isAuthenticated) {
     navigate('/login');
     return null;
   }
 
-  // Redirect to cart if cart is empty
+  
   if (cartItemsCount === 0) {
     navigate('/cart');
     return null;

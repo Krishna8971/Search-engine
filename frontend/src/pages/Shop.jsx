@@ -11,7 +11,7 @@ const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart, isInCart, getItemQuantity } = useCart();
   
-  // State for listings and UI
+  
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,17 +29,17 @@ const Shop = () => {
   const categories = ['All', 'Electronics', 'Furniture', 'Fashion', 'Vehicles', 'Sports', 'Home', 'Accessories', 'Books'];
   const itemsPerPage = 12;
 
-  // Helper function to safely get the first image
+
   const getFirstImage = (images) => {
     if (!images) return null;
     
     try {
-      // If images is already an array, return the first image
+     
       if (Array.isArray(images)) {
         return images.length > 0 ? images[0] : null;
       }
       
-      // If images is a string, try to parse it
+      
       if (typeof images === 'string') {
         const parsedImages = JSON.parse(images);
         return Array.isArray(parsedImages) && parsedImages.length > 0 ? parsedImages[0] : null;
@@ -52,17 +52,17 @@ const Shop = () => {
     }
   };
 
-  // Helper function to safely get all images
+
   const getAllImages = (images) => {
     if (!images) return [];
     
     try {
-      // If images is already an array, return it
+      
       if (Array.isArray(images)) {
         return images;
       }
       
-      // If images is a string, try to parse it
+      
       if (typeof images === 'string') {
         const parsedImages = JSON.parse(images);
         return Array.isArray(parsedImages) ? parsedImages : [];
@@ -75,32 +75,32 @@ const Shop = () => {
     }
   };
 
-  // Handle view details
+
   const handleViewDetails = (listing) => {
     setSelectedListing(listing);
     setSelectedImageIndex(0);
     setShowDetailsModal(true);
   };
 
-  // Handle image selection
+ 
   const handleImageSelect = (index) => {
     setSelectedImageIndex(index);
   };
 
-  // Close modal
+ 
   const closeDetailsModal = () => {
     setShowDetailsModal(false);
     setSelectedListing(null);
     setSelectedImageIndex(0);
   };
 
-  // Show notification
+  
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Handle add to cart
+
   const handleAddToCart = async (listing) => {
     setAddingToCart(prev => new Set([...prev, listing.id]));
     
@@ -122,7 +122,7 @@ const Shop = () => {
     }
   };
 
-  // Handle URL parameters for category filtering
+  
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam && categories.includes(categoryParam)) {
@@ -130,7 +130,7 @@ const Shop = () => {
     }
   }, [searchParams, categories]);
 
-  // Fetch listings from API
+  
   const fetchListings = async (category = selectedCategory, search = searchQuery, page = currentPage) => {
     try {
       setLoading(true);
@@ -171,32 +171,32 @@ const Shop = () => {
     }
   };
 
-  // Initial load and when filters change
+  
   useEffect(() => {
     fetchListings();
   }, [selectedCategory, searchQuery, currentPage]);
 
-  // Handle search
+  
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
     fetchListings(selectedCategory, searchQuery, 1);
   };
 
-  // Handle category filter
+  
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
     setCurrentPage(1);
     setSearchParams(category !== 'All' ? { category } : {});
   };
 
-  // Handle pagination
+  
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Render pagination
+  
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -244,7 +244,7 @@ const Shop = () => {
     );
   };
 
-  // Render loading state
+  
   if (loading) {
     return (
       <div className="shop-container">
@@ -266,7 +266,7 @@ const Shop = () => {
     );
   }
 
-  // Render error state
+  
   if (error) {
     return (
       <div className="shop-container">
@@ -396,7 +396,7 @@ const Shop = () => {
           <>
             <div className="products-grid">
               {listings.map((listing) => {
-                // Add error boundary for each listing
+                
                 try {
                   return (
                     <div key={listing.id} className="product-card">

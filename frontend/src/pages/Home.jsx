@@ -13,7 +13,7 @@ const Home = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // This would be where you implement actual search functionality
+      
       alert(`Searching for: ${searchQuery}`);
     }
   };

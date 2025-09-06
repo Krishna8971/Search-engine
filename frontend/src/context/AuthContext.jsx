@@ -20,14 +20,14 @@ export const AuthProvider = ({ children }) => {
         const userData = await response.json();
         setUser(userData);
       } else {
-        // Token is invalid, clear it
+        
         localStorage.removeItem('access_token');
         setToken(null);
         setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      // Clear invalid token
+      
       localStorage.removeItem('access_token');
       setToken(null);
       setUser(null);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     if (userData) {
       setUser(userData);
     } else {
-      // Fetch user profile if not provided
+      
       fetchUserProfile(accessToken);
     }
   }, [fetchUserProfile]);

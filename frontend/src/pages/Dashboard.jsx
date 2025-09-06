@@ -44,7 +44,7 @@ const Dashboard = ({ onLogout }) => {
     }
   }, [onLogout]);
 
-  // Image handling functions
+  
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + imageFiles.length > 5) {
@@ -55,7 +55,7 @@ const Dashboard = ({ onLogout }) => {
     const newImageFiles = [...imageFiles, ...files];
     setImageFiles(newImageFiles);
     
-    // Create previews
+    
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...newPreviews]);
   };
@@ -64,7 +64,7 @@ const Dashboard = ({ onLogout }) => {
     const newImageFiles = imageFiles.filter((_, i) => i !== index);
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     
-    // Revoke the object URL to free memory
+   
     URL.revokeObjectURL(imagePreviews[index]);
     
     setImageFiles(newImageFiles);
@@ -115,7 +115,7 @@ const Dashboard = ({ onLogout }) => {
       const token = localStorage.getItem('access_token');
       if (!token) return;
 
-      // Fetch stats
+      
       const statsResponse = await fetch('http://localhost:8000/api/dashboard/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -127,7 +127,7 @@ const Dashboard = ({ onLogout }) => {
         setStats(statsData);
       }
 
-      // Fetch listings
+      
       const listingsResponse = await fetch('http://localhost:8000/api/listings/my', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ const Dashboard = ({ onLogout }) => {
         setListings(listingsData.listings || []);
       }
 
-      // Fetch messages
+      
       const messagesResponse = await fetch('http://localhost:8000/api/messages/inbox', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -151,7 +151,7 @@ const Dashboard = ({ onLogout }) => {
         setMessages(messagesData.messages || []);
       }
 
-      // Fetch orders
+      
       const ordersResponse = await fetch('http://localhost:8000/api/orders/my', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -163,7 +163,7 @@ const Dashboard = ({ onLogout }) => {
         setOrders(ordersData.orders || []);
       }
 
-      // Fetch reviews
+    
       const reviewsResponse = await fetch('http://localhost:8000/api/reviews/received', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,7 +184,7 @@ const Dashboard = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('access_token');
       
-      // Convert images to base64
+      
       const base64Images = imageFiles.length > 0 ? await convertImagesToBase64(imageFiles) : [];
       
       const response = await fetch('http://localhost:8000/api/listings', {
@@ -213,7 +213,7 @@ const Dashboard = ({ onLogout }) => {
         setImageFiles([]);
         setImagePreviews([]);
         setShowCreateListing(false);
-        fetchDashboardData(); // Refresh data
+        fetchDashboardData(); 
         alert('Listing created successfully!');
       } else {
         const errorData = await response.json();
@@ -245,7 +245,7 @@ const Dashboard = ({ onLogout }) => {
     try {
       const token = localStorage.getItem('access_token');
       
-      // Convert images to base64
+      
       const base64Images = imageFiles.length > 0 ? await convertImagesToBase64(imageFiles) : (editingListing.images || []);
       
       const response = await fetch(`http://localhost:8000/api/listings/${editingListing.id}`, {
@@ -303,7 +303,7 @@ const Dashboard = ({ onLogout }) => {
       });
 
       if (response.ok) {
-        fetchDashboardData(); // Refresh data
+        fetchDashboardData(); 
         alert('Listing deleted successfully!');
       } else {
         const errorData = await response.json();
@@ -314,7 +314,7 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
-  // Profile management functions
+
   const openEditProfile = () => {
     setEditProfileData({
       name: user?.name || '',
