@@ -52,33 +52,33 @@ const Cart = () => {
             </button>
           </div>
 
-          {/* Recently Viewed or Recommendations */}
+          {/* Browse More Products */}
           <div className="mt-16">
             <h3 className="text-xl font-semibold text-primary mb-6">
-              You Might Like These
+              Browse More Products
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Sample recommended products */}
-              {[1, 2, 3, 4].map((item) => (
-                <div key={item} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="aspect-w-1 aspect-h-1">
-                    <img
-                      src={`https://via.placeholder.com/200x200?text=Product+${item}`}
-                      alt={`Recommended Product ${item}`}
-                      className="w-full h-48 object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h4 className="font-semibold text-primary mb-2">
-                      Recommended Product {item}
-                    </h4>
-                    <p className="text-primary font-bold mb-3">$99.99</p>
-                    <button className="btn btn-primary btn-full">
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <p className="text-secondary mb-6">
+              Discover amazing deals in our comprehensive product catalog
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                className="btn btn-primary btn-lg px-8"
+                onClick={() => window.location.href = '/shop'}
+              >
+                Browse All Products
+              </button>
+              <button 
+                className="btn btn-secondary btn-lg px-8"
+                onClick={() => window.location.href = '/shop?category=Electronics'}
+              >
+                Electronics
+              </button>
+              <button 
+                className="btn btn-secondary btn-lg px-8"
+                onClick={() => window.location.href = '/shop?category=Fashion'}
+              >
+                Fashion
+              </button>
             </div>
           </div>
         </div>

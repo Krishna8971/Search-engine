@@ -75,7 +75,10 @@ const Home = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Category 1 */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+            <div 
+              className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform"
+              onClick={() => navigate('/shop?category=Electronics')}
+            >
               <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 📱
               </div>
@@ -88,7 +91,10 @@ const Home = () => {
             </div>
 
             {/* Category 2 */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+            <div 
+              className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform"
+              onClick={() => navigate('/shop?category=Furniture')}
+            >
               <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 🪑
               </div>
@@ -101,7 +107,10 @@ const Home = () => {
             </div>
 
             {/* Category 3 */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+            <div 
+              className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform"
+              onClick={() => navigate('/shop?category=Fashion')}
+            >
               <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 👕
               </div>
@@ -114,7 +123,10 @@ const Home = () => {
             </div>
 
             {/* Category 4 */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+            <div 
+              className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform"
+              onClick={() => navigate('/shop?category=Vehicles')}
+            >
               <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 🚗
               </div>

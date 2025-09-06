@@ -1,167 +1,398 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
+import '../styles/Shop.css';
 
 const Shop = () => {
   useAuth();
-  // Sample product data
-  const [products] = useState([
-    {
-      id: 1,
-      name: "Wireless Headphones",
-      price: 99.99,
-      image: "https://via.placeholder.com/300x300?text=Headphones",
-      rating: 4.5,
-      category: "Electronics"
-    },
-    {
-      id: 2,
-      name: "Smart Watch",
-      price: 249.99,
-      image: "https://via.placeholder.com/300x300?text=Smart+Watch",
-      rating: 4.8,
-      category: "Electronics"
-    },
-    {
-      id: 3,
-      name: "Running Shoes",
-      price: 129.99,
-      image: "https://via.placeholder.com/300x300?text=Running+Shoes",
-      rating: 4.3,
-      category: "Sports"
-    },
-    {
-      id: 4,
-      name: "Laptop Backpack",
-      price: 59.99,
-      image: "https://via.placeholder.com/300x300?text=Backpack",
-      rating: 4.6,
-      category: "Accessories"
-    },
-    {
-      id: 5,
-      name: "Coffee Maker",
-      price: 89.99,
-      image: "https://via.placeholder.com/300x300?text=Coffee+Maker",
-      rating: 4.4,
-      category: "Home"
-    },
-    {
-      id: 6,
-      name: "Bluetooth Speaker",
-      price: 79.99,
-      image: "https://via.placeholder.com/300x300?text=Speaker",
-      rating: 4.7,
-      category: "Electronics"
-    }
-  ]);
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // State for listings and UI
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const categories = ['All', 'Electronics', 'Sports', 'Accessories', 'Home'];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalListings, setTotalListings] = useState(0);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
+  const categories = ['All', 'Electronics', 'Furniture', 'Fashion', 'Vehicles', 'Sports', 'Home', 'Accessories', 'Books'];
+  const itemsPerPage = 12;
 
-  const filteredProducts = selectedCategory === 'All' 
-    ? products 
-    : products.filter(product => product.category === selectedCategory);
-
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-        </svg>
-      );
+  // Helper function to safely get the first image
+  const getFirstImage = (images) => {
+    if (!images) return null;
+    
+    try {
+      // If images is already an array, return the first image
+      if (Array.isArray(images)) {
+        return images.length > 0 ? images[0] : null;
+      }
+      
+      // If images is a string, try to parse it
+      if (typeof images === 'string') {
+        const parsedImages = JSON.parse(images);
+        return Array.isArray(parsedImages) && parsedImages.length > 0 ? parsedImages[0] : null;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Error parsing images:', error);
+      return null;
     }
-
-    if (hasHalfStar) {
-      stars.push(
-        <svg key="half" className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0v15z"/>
-        </svg>
-      );
-    }
-
-    return stars;
   };
 
+  // Handle URL parameters for category filtering
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categories.includes(categoryParam)) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams, categories]);
+
+  // Fetch listings from API
+  const fetchListings = async (category = selectedCategory, search = searchQuery, page = currentPage) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const params = new URLSearchParams({
+        limit: itemsPerPage,
+        offset: (page - 1) * itemsPerPage
+      });
+      
+      if (category && category !== 'All') {
+        params.append('category', category);
+      }
+      
+      if (search) {
+        params.append('search', search);
+      }
+      
+      const response = await fetch(`http://localhost:8000/api/listings?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Fetched listings data:', data);
+      
+      setListings(data.listings || []);
+      setTotalListings(data.total || 0);
+      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
+      
+    } catch (err) {
+      console.error('Error fetching listings:', err);
+      setError('Failed to load listings. Please try again later.');
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load and when filters change
+  useEffect(() => {
+    fetchListings();
+  }, [selectedCategory, searchQuery, currentPage]);
+
+  // Handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchListings(selectedCategory, searchQuery, 1);
+  };
+
+  // Handle category filter
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+    setSearchParams(category !== 'All' ? { category } : {});
+  };
+
+  // Handle pagination
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Render pagination
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`pagination-btn ${
+            currentPage === i ? 'active' : ''
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    return (
+      <div className="pagination">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+        >
+          Previous
+        </button>
+        {pages}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-btn"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div className="shop-container">
+        <Header />
+        <div className="shop-header">
+          <div className="container shop-header-content">
+            <h1 className="shop-title">Shop Our Products</h1>
+            <p className="shop-subtitle">Discover amazing second-hand items from our community</p>
+          </div>
+        </div>
+        <div className="container">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading listings...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <div className="shop-container">
+        <Header />
+        <div className="shop-header">
+          <div className="container shop-header-content">
+            <h1 className="shop-title">Shop Our Products</h1>
+            <p className="shop-subtitle">Discover amazing second-hand items from our community</p>
+          </div>
+        </div>
+        <div className="container">
+          <div className="error-container">
+            <div className="error-icon">⚠️</div>
+            <h2 className="error-title">Oops! Something went wrong</h2>
+            <p className="error-message">{error}</p>
+            <button 
+              onClick={() => fetchListings()}
+              className="retry-btn"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="shop-container">
       <Header />
       
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div className="container py-8">
-          <h1 className="text-3xl font-bold text-primary mb-4">Shop Our Products</h1>
-          <p className="text-secondary">Discover our amazing collection of products</p>
+      <div className="shop-header">
+        <div className="container shop-header-content">
+          <h1 className="shop-title">Shop Our Products</h1>
+          <p className="shop-subtitle">Discover amazing second-hand items from our community</p>
         </div>
       </div>
 
-      <div className="container py-8">
-        {/* Category Filter */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-primary mb-4">Filter by Category</h3>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                  selectedCategory === category
-                    ? 'bg-primary text-white'
-                    : 'bg-white text-primary hover:bg-gray-100 border border-gray-300'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+      <div className="container">
+        {/* Search and Filter Section */}
+        <div className="search-filter-section">
+          {/* Search Bar */}
+          <div className="search-container">
+            <h3 className="search-title">Search Products</h3>
+            <form onSubmit={handleSearch} className="search-form">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by title, description, or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                <button 
+                  type="submit"
+                  className="search-button"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Category Filter */}
+          <div className="category-section">
+            <h3 className="category-title">Filter by Category</h3>
+            <div className="category-buttons">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => handleCategoryChange(category)}
+                  className={`category-btn ${
+                    selectedCategory === category ? 'active' : ''
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Results Count */}
+          <div className="results-counter">
+            Showing {listings.length} of {totalListings} listings
+            {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+            {searchQuery && ` matching "${searchQuery}"`}
           </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
-              {/* Product Image */}
-              <div className="aspect-w-1 aspect-h-1">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-64 object-cover"
-                />
-              </div>
+        {/* Listings Grid */}
+        {listings.length === 0 ? (
+          <div className="empty-container">
+            <div className="empty-icon">🔍</div>
+            <h3 className="empty-title">No listings found</h3>
+            <p className="empty-message">
+              {searchQuery || selectedCategory !== 'All' 
+                ? 'Try adjusting your search or filter criteria'
+                : 'No listings available at the moment. Check back later!'
+              }
+            </p>
+            {(searchQuery || selectedCategory !== 'All') && (
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('All');
+                  setSearchParams({});
+                }}
+                className="clear-filters-btn"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="products-grid">
+              {listings.map((listing) => {
+                // Add error boundary for each listing
+                try {
+                  return (
+                    <div key={listing.id} className="product-card">
+                  {/* Listing Image */}
+                  <div className="product-image-container">
+                    {getFirstImage(listing.images) ? (
+                      <img
+                        src={getFirstImage(listing.images)}
+                        alt={listing.title}
+                        className="product-image"
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/300x300?text=${encodeURIComponent(listing.title)}`;
+                        }}
+                      />
+                    ) : (
+                      <div className="product-image-placeholder">
+                        📦
+                      </div>
+                    )}
+                  </div>
 
-              {/* Product Info */}
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-primary font-medium">{product.category}</span>
-                  <div className="flex items-center">
-                    {renderStars(product.rating)}
-                    <span className="ml-1 text-sm text-secondary">({product.rating})</span>
+                  {/* Listing Info */}
+                  <div className="product-info">
+                    <div className="product-header">
+                      <span className="product-category">{listing.category}</span>
+                      <span className="product-views">{listing.views || 0}</span>
+                    </div>
+
+                    <h3 className="product-title">{listing.title}</h3>
+                    
+                    <p className="product-description">{listing.description}</p>
+                    
+                    {/* Condition and Location */}
+                    <div className="product-details">
+                      <div className="product-detail-row">
+                        <span className="product-detail-label">Condition:</span>
+                        <span>{listing.condition_type}</span>
+                      </div>
+                      <div className="product-detail-row">
+                        <span className="product-detail-label">Location:</span>
+                        <span>{listing.location}</span>
+                      </div>
+                    </div>
+
+                    {/* Seller Info */}
+                    <div className="product-seller">
+                      <span>Seller: {listing.seller_name}</span>
+                    </div>
+                    
+                    <div className="product-footer">
+                      <span className="product-price">${parseFloat(listing.price).toFixed(2)}</span>
+                      <button className="view-details-btn">
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <h3 className="text-lg font-semibold text-primary mb-2">{product.name}</h3>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-primary">${product.price}</span>
-                  <button className="btn btn-primary btn-sm">
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
+                  );
+                } catch (error) {
+                  console.error('Error rendering listing:', listing, error);
+                  return (
+                    <div key={listing.id} className="product-card">
+                      <div className="product-image-container">
+                        <div className="product-image-placeholder">
+                          ⚠️
+                        </div>
+                      </div>
+                      <div className="product-info">
+                        <h3 className="product-title">Error loading listing</h3>
+                        <p className="product-description">There was an error displaying this listing.</p>
+                      </div>
+                    </div>
+                  );
+                }
+              })}
             </div>
-          ))}
-        </div>
 
-        {/* No Products Message */}
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-secondary text-lg">No products found in this category.</p>
-          </div>
+            {/* Pagination */}
+            {renderPagination()}
+          </>
         )}
       </div>
       <Footer />

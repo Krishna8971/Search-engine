@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/global.css';
+import '../styles/Dashboard.css';
 
 const Dashboard = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -16,14 +17,19 @@ const Dashboard = ({ onLogout }) => {
   const [orders, setOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [showCreateListing, setShowCreateListing] = useState(false);
+  const [showEditListing, setShowEditListing] = useState(false);
+  const [editingListing, setEditingListing] = useState(null);
   const [newListing, setNewListing] = useState({
     title: '',
     description: '',
     price: '',
     category: '',
     condition: '',
-    location: ''
+    location: '',
+    images: []
   });
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('access_token');
@@ -31,6 +37,44 @@ const Dashboard = ({ onLogout }) => {
       onLogout();
     }
   }, [onLogout]);
+
+  // Image handling functions
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + imageFiles.length > 5) {
+      alert('Maximum 5 images allowed');
+      return;
+    }
+    
+    const newImageFiles = [...imageFiles, ...files];
+    setImageFiles(newImageFiles);
+    
+    // Create previews
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    const newImageFiles = imageFiles.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(imagePreviews[index]);
+    
+    setImageFiles(newImageFiles);
+    setImagePreviews(newPreviews);
+  };
+
+  const convertImagesToBase64 = (files) => {
+    return Promise.all(files.map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }));
+  };
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -133,6 +177,10 @@ const Dashboard = ({ onLogout }) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('access_token');
+      
+      // Convert images to base64
+      const base64Images = imageFiles.length > 0 ? await convertImagesToBase64(imageFiles) : [];
+      
       const response = await fetch('http://localhost:8000/api/listings', {
         method: 'POST',
         headers: {
@@ -141,7 +189,8 @@ const Dashboard = ({ onLogout }) => {
         },
         body: JSON.stringify({
           ...newListing,
-          price: parseFloat(newListing.price)
+          price: parseFloat(newListing.price),
+          images: base64Images
         }),
       });
 
@@ -152,8 +201,11 @@ const Dashboard = ({ onLogout }) => {
           price: '',
           category: '',
           condition: '',
-          location: ''
+          location: '',
+          images: []
         });
+        setImageFiles([]);
+        setImagePreviews([]);
         setShowCreateListing(false);
         fetchDashboardData(); // Refresh data
         alert('Listing created successfully!');
@@ -163,6 +215,96 @@ const Dashboard = ({ onLogout }) => {
       }
     } catch (error) {
       alert('Error creating listing: ' + error.message);
+    }
+  };
+
+  const editListing = (listing) => {
+    setEditingListing(listing);
+    setNewListing({
+      title: listing.title,
+      description: listing.description,
+      price: listing.price.toString(),
+      category: listing.category,
+      condition: listing.condition_type,
+      location: listing.location,
+      images: listing.images || []
+    });
+    setImageFiles([]);
+    setImagePreviews([]);
+    setShowEditListing(true);
+  };
+
+  const updateListing = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      // Convert images to base64
+      const base64Images = imageFiles.length > 0 ? await convertImagesToBase64(imageFiles) : (editingListing.images || []);
+      
+      const response = await fetch(`http://localhost:8000/api/listings/${editingListing.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newListing,
+          price: parseFloat(newListing.price),
+          images: base64Images
+        }),
+      });
+
+      if (response.ok) {
+        setNewListing({
+          title: '',
+          description: '',
+          price: '',
+          category: '',
+          condition: '',
+          location: '',
+          images: []
+        });
+        setImageFiles([]);
+        setImagePreviews([]);
+        setEditingListing(null);
+        setShowEditListing(false);
+        fetchDashboardData(); // Refresh data
+        alert('Listing updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert('Error updating listing: ' + (errorData.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error updating listing: ' + error.message);
+    }
+  };
+
+  const deleteListing = async (listingId) => {
+    if (!window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch(`http://localhost:8000/api/listings/${listingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        fetchDashboardData(); // Refresh data
+        alert('Listing deleted successfully!');
+      } else {
+        const errorData = await response.json();
+        alert('Error deleting listing: ' + (errorData.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error deleting listing: ' + error.message);
     }
   };
 
@@ -201,166 +343,105 @@ const Dashboard = ({ onLogout }) => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-  <Header />
+    <div className="dashboard-container">
+      <Header />
+
+      {/* Dashboard Header - Full Width */}
+      <div className="dashboard-header">
+        <div className="container">
+          <div className="dashboard-header-content">
+            <h1 className="dashboard-title">Dashboard</h1>
+            <p className="dashboard-subtitle">
+              Welcome back, {user?.name}! Manage your listings, orders, and messages.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
-      <main className="container" style={{ padding: 'var(--spacing-2xl) var(--spacing-md)' }}>
-        {/* Dashboard Header */}
-        <div style={{
-          backgroundColor: 'var(--surface-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-2xl)',
-          boxShadow: 'var(--shadow-md)',
-          marginBottom: 'var(--spacing-xl)'
-        }}>
-          <h2 className="mb-lg">Dashboard</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-            Welcome back, {user?.name}! Manage your listings, orders, and messages.
-          </p>
+      <main className="container">
           
-          {/* Stats Cards */}
-          {stats && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 'var(--spacing-lg)',
-              marginBottom: 'var(--spacing-xl)'
-            }}>
-              <div style={{
-                padding: 'var(--spacing-lg)',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ color: 'var(--primary-color)', margin: '0 0 var(--spacing-sm) 0' }}>
-                  {stats.listings_count}
-                </h3>
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>Active Listings</p>
-              </div>
-              
-              <div style={{
-                padding: 'var(--spacing-lg)',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ color: 'var(--primary-color)', margin: '0 0 var(--spacing-sm) 0' }}>
-                  {stats.unread_messages}
-                </h3>
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>Unread Messages</p>
-              </div>
-
-              <div style={{
-                padding: 'var(--spacing-lg)',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ color: 'var(--primary-color)', margin: '0 0 var(--spacing-sm) 0' }}>
-                  {stats.orders_count}
-                </h3>
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>Orders</p>
-              </div>
-
-              <div style={{
-                padding: 'var(--spacing-lg)',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center'
-              }}>
-                <h3 style={{ color: 'var(--primary-color)', margin: '0 0 var(--spacing-sm) 0' }}>
-                  {stats.average_rating || 'N/A'}
-                </h3>
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>Avg Rating</p>
-              </div>
+        {/* Stats Cards */}
+        {stats && (
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span className="stat-number">{stats.listings_count}</span>
+              <span className="stat-label">Active Listings</span>
             </div>
-          )}
+            
+            <div className="stat-card">
+              <span className="stat-number">{stats.unread_messages}</span>
+              <span className="stat-label">Unread Messages</span>
+            </div>
 
-          {/* Tab Navigation */}
-          <div style={{
-            display: 'flex',
-            gap: 'var(--spacing-sm)',
-            marginBottom: 'var(--spacing-lg)',
-            borderBottom: '1px solid var(--border-color)'
-          }}>
-            {['overview', 'listings', 'messages', 'orders', 'reviews'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: 'var(--spacing-sm) var(--spacing-md)',
-                  border: 'none',
-                  background: 'none',
-                  borderBottom: activeTab === tab ? '2px solid var(--primary-color)' : '2px solid transparent',
-                  color: activeTab === tab ? 'var(--primary-color)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  textTransform: 'capitalize'
-                }}
-              >
-                {tab}
-              </button>
-            ))}
+            <div className="stat-card">
+              <span className="stat-number">{stats.orders_count}</span>
+              <span className="stat-label">Orders</span>
+            </div>
+
+            <div className="stat-card">
+              <span className="stat-number">{stats.average_rating || 'N/A'}</span>
+              <span className="stat-label">Avg Rating</span>
+            </div>
           </div>
+        )}
+
+        {/* Tab Navigation */}
+        <div className="tab-navigation">
+          {['overview', 'listings', 'messages', 'orders', 'reviews'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div style={{
-            backgroundColor: 'var(--surface-color)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--spacing-2xl)',
-            boxShadow: 'var(--shadow-md)',
-            marginBottom: 'var(--spacing-xl)'
-          }}>
-            <h3 className="mb-lg">Quick Actions</h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 'var(--spacing-lg)'
-            }}>
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">Quick Actions</h3>
+            </div>
+            <div className="quick-actions-grid">
               <button 
-                className="btn btn-primary btn-full" 
-                style={{ padding: 'var(--spacing-lg)' }}
+                className="quick-action-btn"
                 onClick={() => navigate('/shop')}
               >
-                🛍️ Browse Items
+                <span className="quick-action-icon">🛍️</span>
+                Browse Items
               </button>
               <button 
-                className="btn btn-accent btn-full" 
-                style={{ padding: 'var(--spacing-lg)' }}
+                className="quick-action-btn"
                 onClick={() => setShowCreateListing(true)}
               >
-                📝 Create Listing
+                <span className="quick-action-icon">📝</span>
+                Create Listing
               </button>
               <button 
-                className="btn btn-secondary btn-full" 
-                style={{ padding: 'var(--spacing-lg)' }}
+                className="quick-action-btn"
                 onClick={() => setActiveTab('messages')}
               >
-                💬 Messages ({stats?.unread_messages || 0})
+                <span className="quick-action-icon">💬</span>
+                Messages ({stats?.unread_messages || 0})
               </button>
               <button 
-                className="btn btn-secondary btn-full" 
-                style={{ padding: 'var(--spacing-lg)' }}
+                className="quick-action-btn"
                 onClick={() => setActiveTab('orders')}
               >
-                📦 Orders ({stats?.orders_count || 0})
+                <span className="quick-action-icon">📦</span>
+                Orders ({stats?.orders_count || 0})
               </button>
             </div>
           </div>
         )}
 
         {activeTab === 'listings' && (
-          <div style={{
-            backgroundColor: 'var(--surface-color)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--spacing-2xl)',
-            boxShadow: 'var(--shadow-md)',
-            marginBottom: 'var(--spacing-xl)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
-              <h3>My Listings</h3>
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">My Listings</h3>
               <button 
                 className="btn btn-primary"
                 onClick={() => setShowCreateListing(true)}
@@ -370,35 +451,60 @@ const Dashboard = ({ onLogout }) => {
             </div>
             
             {listings.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No listings yet. Create your first listing to get started!
-              </p>
+              <div className="text-center">
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem', marginBottom: '1rem' }}>
+                  No listings yet. Create your first listing to get started!
+                </p>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setShowCreateListing(true)}
+                >
+                  Create Your First Listing
+                </button>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gap: 'var(--spacing-md)' }}>
+              <div className="listings-grid">
                 {listings.map(listing => (
-                  <div key={listing.id} style={{
-                    padding: 'var(--spacing-lg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: 'var(--surface-light)'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div key={listing.id} className="listing-item">
+                    <div className="listing-header">
                       <div>
-                        <h4 style={{ margin: '0 0 var(--spacing-sm) 0' }}>{listing.title}</h4>
-                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 var(--spacing-sm) 0' }}>
+                        <h4 className="listing-title">{listing.title}</h4>
+                        <p className="listing-description">
                           {listing.description}
                         </p>
-                        <div style={{ display: 'flex', gap: 'var(--spacing-md)', fontSize: 'var(--font-size-sm)' }}>
-                          <span><strong>Price:</strong> ${listing.price}</span>
-                          <span><strong>Category:</strong> {listing.category}</span>
-                          <span><strong>Condition:</strong> {listing.condition}</span>
-                          <span><strong>Location:</strong> {listing.location}</span>
+                        <div className="listing-details">
+                          <div className="listing-detail">
+                            <span className="listing-detail-label">Price</span>
+                            <span className="listing-detail-value">${listing.price}</span>
+                          </div>
+                          <div className="listing-detail">
+                            <span className="listing-detail-label">Category</span>
+                            <span className="listing-detail-value">{listing.category}</span>
+                          </div>
+                          <div className="listing-detail">
+                            <span className="listing-detail-label">Condition</span>
+                            <span className="listing-detail-value">{listing.condition_type}</span>
+                          </div>
+                          <div className="listing-detail">
+                            <span className="listing-detail-label">Location</span>
+                            <span className="listing-detail-value">{listing.location}</span>
+                          </div>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-                        <button className="btn btn-secondary btn-sm">Edit</button>
-                        <button className="btn btn-danger btn-sm">Delete</button>
-                      </div>
+                       <div className="listing-actions">
+                         <button 
+                           className="btn btn-secondary btn-sm"
+                           onClick={() => editListing(listing)}
+                         >
+                           Edit
+                         </button>
+                         <button 
+                           className="btn btn-danger btn-sm"
+                           onClick={() => deleteListing(listing.id)}
+                         >
+                           Delete
+                         </button>
+                       </div>
                     </div>
                   </div>
                 ))}
@@ -549,30 +655,218 @@ const Dashboard = ({ onLogout }) => {
           </div>
         )}
 
-        {/* Create Listing Modal */}
-        {showCreateListing && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: 'var(--surface-color)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--spacing-2xl)',
-              maxWidth: '500px',
-              width: '90%',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}>
-              <h3 className="mb-lg">Create New Listing</h3>
+         {/* Edit Listing Modal */}
+         {showEditListing && (
+           <div className="modal-overlay">
+             <div className="modal-content">
+               <div className="modal-header">
+                 <h3 className="modal-title">Edit Listing</h3>
+                 <button 
+                   className="modal-close"
+                   onClick={() => {
+                     setShowEditListing(false);
+                     setEditingListing(null);
+                     setImageFiles([]);
+                     setImagePreviews([]);
+                   }}
+                 >
+                   ×
+                 </button>
+               </div>
+               <form onSubmit={updateListing}>
+                 <div className="form-group">
+                   <label className="form-label">Title</label>
+                   <input
+                     type="text"
+                     className="form-input"
+                     value={newListing.title}
+                     onChange={(e) => setNewListing({...newListing, title: e.target.value})}
+                     required
+                   />
+                 </div>
+                 
+                 <div className="form-group">
+                   <label className="form-label">Description</label>
+                   <textarea
+                     className="form-input"
+                     rows="3"
+                     value={newListing.description}
+                     onChange={(e) => setNewListing({...newListing, description: e.target.value})}
+                     required
+                   />
+                 </div>
+                 
+                 <div className="form-grid">
+                   <div className="form-group">
+                     <label className="form-label">Price</label>
+                     <input
+                       type="number"
+                       step="0.01"
+                       className="form-input"
+                       value={newListing.price}
+                       onChange={(e) => setNewListing({...newListing, price: e.target.value})}
+                       required
+                     />
+                   </div>
+                   
+                   <div className="form-group">
+                     <label className="form-label">Category</label>
+                     <select
+                       className="form-input"
+                       value={newListing.category}
+                       onChange={(e) => setNewListing({...newListing, category: e.target.value})}
+                       required
+                     >
+                       <option value="">Select Category</option>
+                       <option value="Electronics">Electronics</option>
+                       <option value="Fashion">Fashion</option>
+                       <option value="Furniture">Furniture</option>
+                       <option value="Vehicles">Vehicles</option>
+                       <option value="Sports">Sports</option>
+                       <option value="Books">Books</option>
+                       <option value="Other">Other</option>
+                     </select>
+                   </div>
+                 </div>
+                 
+                 <div className="form-grid">
+                   <div className="form-group">
+                     <label className="form-label">Condition</label>
+                     <select
+                       className="form-input"
+                       value={newListing.condition}
+                       onChange={(e) => setNewListing({...newListing, condition: e.target.value})}
+                       required
+                     >
+                       <option value="">Select Condition</option>
+                       <option value="New">New</option>
+                       <option value="Like New">Like New</option>
+                       <option value="Good">Good</option>
+                       <option value="Fair">Fair</option>
+                       <option value="Poor">Poor</option>
+                     </select>
+                   </div>
+                   
+                   <div className="form-group">
+                     <label className="form-label">Location</label>
+                     <input
+                       type="text"
+                       className="form-input"
+                       value={newListing.location}
+                       onChange={(e) => setNewListing({...newListing, location: e.target.value})}
+                       required
+                     />
+                   </div>
+                 </div>
+                 
+                 {/* Image Upload Section */}
+                 <div className="form-group">
+                   <label className="form-label">Product Images (Max 5)</label>
+                   <div className="image-upload-area">
+                     <input
+                       type="file"
+                       multiple
+                       accept="image/*"
+                       onChange={handleImageUpload}
+                       style={{ display: 'none' }}
+                       id="image-upload-edit"
+                     />
+                     <label 
+                       htmlFor="image-upload-edit" 
+                       className="image-upload-label"
+                     >
+                       📷 Click to upload new images
+                     </label>
+                     <p className="image-upload-hint">
+                       PNG, JPG, JPEG up to 5MB each. Leave empty to keep existing images.
+                     </p>
+                   </div>
+                   
+                   {/* Current Images */}
+                   {editingListing && editingListing.images && editingListing.images.length > 0 && (
+                     <div style={{ marginBottom: '1rem' }}>
+                       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                         Current images:
+                       </p>
+                       <div className="image-preview-grid">
+                         {editingListing.images.map((image, index) => (
+                           <div key={`current-${index}`} className="image-preview-item">
+                             <img 
+                               src={image} 
+                               alt={`Current ${index + 1}`}
+                               className="image-preview"
+                             />
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                   
+                   {/* New Image Previews */}
+                   {imagePreviews.length > 0 && (
+                     <div>
+                       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                         New images:
+                       </p>
+                       <div className="image-preview-grid">
+                         {imagePreviews.map((preview, index) => (
+                           <div key={index} className="image-preview-item">
+                             <img 
+                               src={preview} 
+                               alt={`Preview ${index + 1}`}
+                               className="image-preview"
+                             />
+                             <button
+                               type="button"
+                               onClick={() => removeImage(index)}
+                               className="image-remove-btn"
+                             >
+                               ×
+                             </button>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
+                   <button type="submit" className="btn btn-primary">Update Listing</button>
+                   <button 
+                     type="button" 
+                     className="btn btn-secondary"
+                     onClick={() => {
+                       setShowEditListing(false);
+                       setEditingListing(null);
+                       setImageFiles([]);
+                       setImagePreviews([]);
+                     }}
+                   >
+                     Cancel
+                   </button>
+                 </div>
+               </form>
+             </div>
+           </div>
+         )}
+
+         {/* Create Listing Modal */}
+         {showCreateListing && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 className="modal-title">Create New Listing</h3>
+                <button 
+                  className="modal-close"
+                  onClick={() => {
+                    setShowCreateListing(false);
+                    setImageFiles([]);
+                    setImagePreviews([]);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
               <form onSubmit={createListing}>
                 <div className="form-group">
                   <label className="form-label">Title</label>
@@ -596,7 +890,7 @@ const Dashboard = ({ onLogout }) => {
                   />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+                <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">Price</label>
                     <input
@@ -629,7 +923,7 @@ const Dashboard = ({ onLogout }) => {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+                <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">Condition</label>
                     <select
@@ -659,12 +953,62 @@ const Dashboard = ({ onLogout }) => {
                   </div>
                 </div>
                 
+                {/* Image Upload Section */}
+                <div className="form-group">
+                  <label className="form-label">Product Images (Max 5)</label>
+                  <div className="image-upload-area">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                      id="image-upload"
+                    />
+                    <label 
+                      htmlFor="image-upload" 
+                      className="image-upload-label"
+                    >
+                      📷 Click to upload images
+                    </label>
+                    <p className="image-upload-hint">
+                      PNG, JPG, JPEG up to 5MB each
+                    </p>
+                  </div>
+                  
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="image-preview-grid">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="image-preview-item">
+                          <img 
+                            src={preview} 
+                            alt={`Preview ${index + 1}`}
+                            className="image-preview"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="image-remove-btn"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
                 <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
                   <button type="submit" className="btn btn-primary">Create Listing</button>
                   <button 
                     type="button" 
                     className="btn btn-secondary"
-                    onClick={() => setShowCreateListing(false)}
+                    onClick={() => {
+                      setShowCreateListing(false);
+                      setImageFiles([]);
+                      setImagePreviews([]);
+                    }}
                   >
                     Cancel
                   </button>

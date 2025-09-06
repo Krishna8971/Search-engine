@@ -223,6 +223,83 @@ def init_dashboard_tables():
 init_dashboard_tables()
 
 # LISTINGS ENDPOINTS
+@router.get("/api/listings", response_model=dict)
+async def get_all_listings(category: str = None, search: str = None, limit: int = 50, offset: int = 0):
+    """Get all active listings for the shop page"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Build query with filters
+        query = """
+            SELECT l.id, l.title, l.description, l.price, l.category, l.condition_type, 
+                   l.location, l.images, l.status, l.views, l.created_at, l.updated_at,
+                   u.name as seller_name, u.email as seller_email
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            WHERE l.status = 'active'
+        """
+        params = []
+        
+        if category and category != 'All':
+            query += " AND l.category = %s"
+            params.append(category)
+        
+        if search:
+            query += " AND (l.title LIKE %s OR l.description LIKE %s OR l.location LIKE %s)"
+            search_term = f"%{search}%"
+            params.extend([search_term, search_term, search_term])
+        
+        query += " ORDER BY l.created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+        
+        cursor.execute(query, params)
+        listings = cursor.fetchall()
+        
+        # Parse images JSON for each listing
+        for listing in listings:
+            if listing['images']:
+                try:
+                    import json
+                    listing['images'] = json.loads(listing['images'])
+                except (json.JSONDecodeError, TypeError):
+                    listing['images'] = []
+            else:
+                listing['images'] = []
+        
+        # Get total count for pagination
+        count_query = """
+            SELECT COUNT(*) as total
+            FROM listings l
+            WHERE l.status = 'active'
+        """
+        count_params = []
+        
+        if category and category != 'All':
+            count_query += " AND l.category = %s"
+            count_params.append(category)
+        
+        if search:
+            count_query += " AND (l.title LIKE %s OR l.description LIKE %s OR l.location LIKE %s)"
+            search_term = f"%{search}%"
+            count_params.extend([search_term, search_term, search_term])
+        
+        cursor.execute(count_query, count_params)
+        total_count = cursor.fetchone()['total']
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "listings": listings,
+            "total": total_count,
+            "limit": limit,
+            "offset": offset
+        }
+    except Error as e:
+        print(f"Error getting all listings: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get listings")
+
 @router.post("/api/listings", response_model=dict)
 async def create_listing(listing: ListingCreate, current_user: dict = Depends(get_current_user)):
     """Create a new listing"""
@@ -230,18 +307,25 @@ async def create_listing(listing: ListingCreate, current_user: dict = Depends(ge
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Convert images list to JSON string for storage
+        images_json = None
+        if listing.images and len(listing.images) > 0:
+            import json
+            images_json = json.dumps(listing.images)
+        
         cursor.execute("""
-            INSERT INTO listings (user_id, title, description, price, category, `condition`, location, images)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO listings (user_id, seller_id, title, description, price, category, condition_type, location, images)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             current_user['id'],
+            current_user['id'],  # seller_id is the same as user_id
             listing.title,
             listing.description,
             listing.price,
             listing.category,
             listing.condition,
             listing.location,
-            str(listing.images) if listing.images else None
+            images_json
         ))
         
         listing_id = cursor.lastrowid
@@ -261,14 +345,26 @@ async def get_my_listings(current_user: dict = Depends(get_current_user)):
         cursor = conn.cursor(dictionary=True)
         
         cursor.execute("""
-            SELECT id, title, description, price, category, `condition`, location, 
-                   images, is_active, created_at, updated_at
+            SELECT id, title, description, price, category, condition_type, location, 
+                   images, status, created_at, updated_at
             FROM listings 
-            WHERE user_id = %s 
+            WHERE user_id = %s
             ORDER BY created_at DESC
         """, (current_user['id'],))
         
         listings = cursor.fetchall()
+        
+        # Parse images JSON for each listing
+        for listing in listings:
+            if listing['images']:
+                try:
+                    import json
+                    listing['images'] = json.loads(listing['images'])
+                except (json.JSONDecodeError, TypeError):
+                    listing['images'] = []
+            else:
+                listing['images'] = []
+        
         cursor.close()
         conn.close()
         
@@ -299,7 +395,14 @@ async def update_listing(listing_id: int, listing: ListingUpdate, current_user: 
             if value is not None:
                 if field == 'images':
                     update_fields.append(f"{field} = %s")
-                    values.append(str(value))
+                    # Convert images list to JSON string for storage
+                    import json
+                    images_json = json.dumps(value) if value else None
+                    values.append(images_json)
+                elif field == 'condition':
+                    # Map condition to condition_type in database
+                    update_fields.append(f"condition_type = %s")
+                    values.append(value)
                 else:
                     update_fields.append(f"{field} = %s")
                     values.append(value)
@@ -592,13 +695,27 @@ async def create_review(review: ReviewCreate, current_user: dict = Depends(get_c
         
         seller_id, listing_title = listing
         
+        # Get order_id for this listing (assuming there's an order)
         cursor.execute("""
-            INSERT INTO reviews (reviewer_id, reviewee_id, listing_id, rating, comment)
-            VALUES (%s, %s, %s, %s, %s)
+            SELECT id FROM orders 
+            WHERE listing_id = %s AND buyer_id = %s
+            ORDER BY created_at DESC LIMIT 1
+        """, (review.listing_id, current_user['id']))
+        
+        order_result = cursor.fetchone()
+        if not order_result:
+            raise HTTPException(status_code=400, detail="No order found for this listing")
+        
+        order_id = order_result[0]
+        
+        cursor.execute("""
+            INSERT INTO reviews (reviewer_id, reviewee_id, reviewed_user_id, order_id, rating, comment)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             current_user['id'],
             seller_id,
-            review.listing_id,
+            seller_id,  # reviewed_user_id is the same as reviewee_id
+            order_id,
             review.rating,
             review.comment
         ))
@@ -622,13 +739,15 @@ async def get_received_reviews(current_user: dict = Depends(get_current_user)):
         cursor.execute("""
             SELECT r.id, r.rating, r.comment, r.created_at,
                    u.name as reviewer_name,
+                   o.listing_id,
                    l.title as listing_title
             FROM reviews r
             JOIN users u ON r.reviewer_id = u.id
-            JOIN listings l ON r.listing_id = l.id
-            WHERE r.reviewee_id = %s
+            JOIN orders o ON r.order_id = o.id
+            JOIN listings l ON o.listing_id = l.id
+            WHERE r.reviewee_id = %s OR r.reviewed_user_id = %s
             ORDER BY r.created_at DESC
-        """, (current_user['id'],))
+        """, (current_user['id'], current_user['id']))
         
         reviews = cursor.fetchall()
         cursor.close()
@@ -649,10 +768,12 @@ async def get_given_reviews(current_user: dict = Depends(get_current_user)):
         cursor.execute("""
             SELECT r.id, r.rating, r.comment, r.created_at,
                    u.name as reviewee_name,
+                   o.listing_id,
                    l.title as listing_title
             FROM reviews r
             JOIN users u ON r.reviewee_id = u.id
-            JOIN listings l ON r.listing_id = l.id
+            JOIN orders o ON r.order_id = o.id
+            JOIN listings l ON o.listing_id = l.id
             WHERE r.reviewer_id = %s
             ORDER BY r.created_at DESC
         """, (current_user['id'],))
