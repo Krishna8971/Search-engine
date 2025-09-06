@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import '../styles/Cart.css';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -105,12 +106,12 @@ const Cart = () => {
   // Loading state
   if (loading && cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="cart-container">
         <Header />
         <div className="container py-16">
-          <div className="text-center">
-            <div className="loading-spinner mx-auto mb-4"></div>
-            <p className="text-secondary">Loading your cart...</p>
+          <div className="cart-loading">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading your cart...</p>
           </div>
         </div>
         <Footer />
@@ -119,29 +120,33 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="cart-container">
       <Header />
       
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-          notification.type === 'error' ? 'bg-red-500' : 
-          notification.type === 'info' ? 'bg-blue-500' : 'bg-green-500'
-        } text-white`}>
+        <div className={`cart-notification ${
+          notification.type === 'error' ? 'error' : 
+          notification.type === 'info' ? 'info' : 'success'
+        }`}>
           {notification.message}
         </div>
       )}
 
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div className="container py-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-primary">Shopping Cart</h1>
-            {cartItemsCount > 0 && (
-              <div className="text-secondary">
-                {cartItemsCount} item{cartItemsCount !== 1 ? 's' : ''} in cart
+      <div className="cart-header">
+        <div className="container">
+          <div className="cart-header-content py-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="cart-title">Shopping Cart</h1>
+                {cartItemsCount > 0 && (
+                  <p className="cart-subtitle">
+                    {cartItemsCount} item{cartItemsCount !== 1 ? 's' : ''} in your cart
+                  </p>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -149,11 +154,10 @@ const Cart = () => {
       <div className="container py-8">
         {cartItems.length === 0 ? (
           /* Empty Cart Content */
-          <div className="text-center py-16">
+          <div className="empty-cart-container fade-in">
             {/* Cart Icon */}
-            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <div className="empty-cart-icon">
               <svg
-                className="w-12 h-12 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -168,17 +172,17 @@ const Cart = () => {
             </div>
 
             {/* Empty Message */}
-            <h2 className="text-2xl font-semibold text-primary mb-4">
+            <h2 className="empty-cart-title">
               Your Cart is Empty
             </h2>
-            <p className="text-secondary mb-8 max-w-md mx-auto">
+            <p className="empty-cart-message">
               Looks like you haven't added anything to your cart yet. Start shopping to fill it up!
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="empty-cart-actions">
               <button 
-                className="btn btn-primary btn-lg px-8"
+                className="browse-btn browse-btn-primary"
                 onClick={() => navigate('/shop')}
               >
                 Continue Shopping
@@ -186,28 +190,28 @@ const Cart = () => {
             </div>
 
             {/* Browse More Products */}
-            <div className="mt-16">
-              <h3 className="text-xl font-semibold text-primary mb-6">
+            <div className="browse-section">
+              <h3 className="browse-title">
                 Browse More Products
               </h3>
-              <p className="text-secondary mb-6">
+              <p className="browse-description">
                 Discover amazing deals in our comprehensive product catalog
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="browse-buttons">
                 <button 
-                  className="btn btn-primary btn-lg px-8"
+                  className="browse-btn browse-btn-primary"
                   onClick={() => navigate('/shop')}
                 >
                   Browse All Products
                 </button>
                 <button 
-                  className="btn btn-secondary btn-lg px-8"
+                  className="browse-btn browse-btn-secondary"
                   onClick={() => navigate('/shop?category=Electronics')}
                 >
                   Electronics
                 </button>
                 <button 
-                  className="btn btn-secondary btn-lg px-8"
+                  className="browse-btn browse-btn-secondary"
                   onClick={() => navigate('/shop?category=Fashion')}
                 >
                   Fashion
@@ -220,88 +224,85 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-md">
-                <div className="p-6 border-b border-gray-200">
+              <div className="cart-items-container slide-up">
+                <div className="cart-items-header">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-primary">
+                    <h2 className="cart-items-title">
                       Cart Items ({cartItemsCount})
                     </h2>
                     <button
                       onClick={handleClearCart}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      className="clear-cart-btn"
                     >
                       Clear Cart
                     </button>
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <div>
                   {cartItems.map((item) => (
-                    <div key={item.id} className="p-6">
-                      <div className="flex items-start space-x-4">
+                    <div key={item.id} className="cart-item fade-in">
+                      <div className="cart-item-content">
                         {/* Product Image */}
-                        <div className="flex-shrink-0">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = `https://via.placeholder.com/80x80?text=${encodeURIComponent(item.title)}`;
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-2xl">
-                                📦
-                              </div>
-                            )}
-                          </div>
+                        <div className="cart-item-image">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              onError={(e) => {
+                                e.target.src = `https://via.placeholder.com/80x80?text=${encodeURIComponent(item.title)}`;
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-2xl">
+                              📦
+                            </div>
+                          )}
                         </div>
 
                         {/* Product Details */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-medium text-primary truncate">
+                        <div className="cart-item-details">
+                          <h3 className="cart-item-title">
                             {item.title}
                           </h3>
-                          <p className="text-sm text-secondary">
+                          <p className="cart-item-seller">
                             Seller: {item.seller_name}
                           </p>
-                          <p className="text-lg font-semibold text-primary mt-2">
+                          <p className="cart-item-price">
                             ${item.price.toFixed(2)}
                           </p>
                         </div>
 
                         {/* Quantity Controls */}
-                        <div className="flex items-center space-x-2">
+                        <div className="quantity-controls">
                           <button
                             onClick={() => handleQuantityUpdate(item.product_id, item.quantity - 1)}
                             disabled={updatingItems.has(item.product_id) || item.quantity <= 1}
-                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="quantity-btn"
                           >
                             -
                           </button>
-                          <span className="w-12 text-center font-medium">
+                          <span className="quantity-display">
                             {updatingItems.has(item.product_id) ? '...' : item.quantity}
                           </span>
                           <button
                             onClick={() => handleQuantityUpdate(item.product_id, item.quantity + 1)}
                             disabled={updatingItems.has(item.product_id)}
-                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="quantity-btn"
                           >
                             +
                           </button>
                         </div>
 
                         {/* Item Total */}
-                        <div className="text-right">
-                          <p className="text-lg font-semibold text-primary">
+                        <div className="cart-item-total">
+                          <p className="cart-item-total-price">
                             ${(item.price * item.quantity).toFixed(2)}
                           </p>
                           <button
                             onClick={() => handleRemoveItem(item.product_id)}
                             disabled={updatingItems.has(item.product_id)}
-                            className="text-red-500 hover:text-red-700 text-sm font-medium mt-1 disabled:opacity-50"
+                            className="remove-item-btn"
                           >
                             Remove
                           </button>
@@ -315,43 +316,43 @@ const Cart = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <h3 className="text-lg font-semibold text-primary mb-4">Order Summary</h3>
+              <div className="order-summary slide-up">
+                <h3 className="order-summary-title">Order Summary</h3>
                 
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-secondary">Subtotal</span>
-                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                <div className="order-summary-details">
+                  <div className="summary-row">
+                    <span className="summary-label">Subtotal</span>
+                    <span className="summary-value">${cartTotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-secondary">Shipping</span>
-                    <span className="font-medium text-green-600">Free</span>
+                  <div className="summary-row">
+                    <span className="summary-label">Shipping</span>
+                    <span className="summary-value" style={{color: '#10b981'}}>Free</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-secondary">Tax</span>
-                    <span className="font-medium">$0.00</span>
+                  <div className="summary-row">
+                    <span className="summary-label">Tax</span>
+                    <span className="summary-value">$0.00</span>
                   </div>
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-lg font-semibold">Total</span>
-                      <span className="text-lg font-semibold">${cartTotal.toFixed(2)}</span>
-                    </div>
+                  <div className="summary-row">
+                    <span className="summary-label summary-total">Total</span>
+                    <span className="summary-value summary-total">${cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <button 
-                  onClick={handleCheckout}
-                  className="btn btn-primary btn-full mb-4"
-                >
-                  Proceed to Checkout
-                </button>
+                <div className="cart-action-buttons">
+                  <button 
+                    onClick={handleCheckout}
+                    className="checkout-btn"
+                  >
+                    Proceed to Checkout
+                  </button>
 
-                <button 
-                  onClick={() => navigate('/shop')}
-                  className="btn btn-secondary btn-full"
-                >
-                  Continue Shopping
-                </button>
+                  <button 
+                    onClick={() => navigate('/shop')}
+                    className="continue-shopping-btn"
+                  >
+                    Continue Shopping
+                  </button>
+                </div>
               </div>
             </div>
           </div>

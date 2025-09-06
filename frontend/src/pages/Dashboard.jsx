@@ -30,6 +30,12 @@ const Dashboard = ({ onLogout }) => {
   });
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showDeleteProfile, setShowDeleteProfile] = useState(false);
+  const [editProfileData, setEditProfileData] = useState({
+    name: '',
+    email: ''
+  });
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('access_token');
@@ -308,6 +314,72 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
+  // Profile management functions
+  const openEditProfile = () => {
+    setEditProfileData({
+      name: user?.name || '',
+      email: user?.email || ''
+    });
+    setShowEditProfile(true);
+  };
+
+  const updateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch('http://localhost:8000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editProfileData),
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(updatedUser);
+        setShowEditProfile(false);
+        alert('Profile updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert('Error updating profile: ' + (errorData.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error updating profile: ' + error.message);
+    }
+  };
+
+  const deleteProfile = async () => {
+    if (!window.confirm('Are you sure you want to delete your profile? This action cannot be undone and will delete all your data including listings, orders, and messages.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch('http://localhost:8000/api/profile', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('Profile deleted successfully! You will be logged out.');
+        handleLogout();
+        navigate('/');
+      } else {
+        const errorData = await response.json();
+        alert('Error deleting profile: ' + (errorData.detail || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error deleting profile: ' + error.message);
+    }
+  };
+
   useEffect(() => {
     fetchUserProfile();
   }, [fetchUserProfile]);
@@ -388,7 +460,7 @@ const Dashboard = ({ onLogout }) => {
 
         {/* Tab Navigation */}
         <div className="tab-navigation">
-          {['overview', 'listings', 'messages', 'orders', 'reviews'].map(tab => (
+          {['overview', 'listings', 'messages', 'orders', 'reviews', 'profile'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -652,6 +724,73 @@ const Dashboard = ({ onLogout }) => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">Profile Information</h3>
+              <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+                <button 
+                  className="btn btn-primary"
+                  onClick={openEditProfile}
+                >
+                  Edit Profile
+                </button>
+                <button 
+                  className="btn btn-danger"
+                  onClick={deleteProfile}
+                >
+                  Delete Profile
+                </button>
+              </div>
+            </div>
+            
+            <div className="profile-info">
+              <div className="profile-field">
+                <label className="profile-label">Name:</label>
+                <span className="profile-value">{user?.name || 'N/A'}</span>
+              </div>
+              <div className="profile-field">
+                <label className="profile-label">Email:</label>
+                <span className="profile-value">{user?.email || 'N/A'}</span>
+              </div>
+              <div className="profile-field">
+                <label className="profile-label">Member Since:</label>
+                <span className="profile-value">
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
+              <div className="profile-field">
+                <label className="profile-label">Account Status:</label>
+                <span className={`profile-status ${user?.is_active ? 'active' : 'inactive'}`}>
+                  {user?.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+
+            <div className="profile-stats">
+              <h4 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--text-primary)' }}>Account Statistics</h4>
+              <div className="profile-stats-grid">
+                <div className="profile-stat-item">
+                  <span className="profile-stat-number">{stats?.listings_count || 0}</span>
+                  <span className="profile-stat-label">Listings</span>
+                </div>
+                <div className="profile-stat-item">
+                  <span className="profile-stat-number">{stats?.orders_count || 0}</span>
+                  <span className="profile-stat-label">Orders</span>
+                </div>
+                <div className="profile-stat-item">
+                  <span className="profile-stat-number">{stats?.sales_count || 0}</span>
+                  <span className="profile-stat-label">Sales</span>
+                </div>
+                <div className="profile-stat-item">
+                  <span className="profile-stat-number">{stats?.average_rating || 'N/A'}</span>
+                  <span className="profile-stat-label">Avg Rating</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1009,6 +1148,57 @@ const Dashboard = ({ onLogout }) => {
                       setImageFiles([]);
                       setImagePreviews([]);
                     }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Profile Modal */}
+        {showEditProfile && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 className="modal-title">Edit Profile</h3>
+                <button 
+                  className="modal-close"
+                  onClick={() => setShowEditProfile(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <form onSubmit={updateProfile}>
+                <div className="form-group">
+                  <label className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editProfileData.name}
+                    onChange={(e) => setEditProfileData({...editProfileData, name: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={editProfileData.email}
+                    onChange={(e) => setEditProfileData({...editProfileData, email: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
+                  <button type="submit" className="btn btn-primary">Update Profile</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowEditProfile(false)}
                   >
                     Cancel
                   </button>

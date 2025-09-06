@@ -824,3 +824,72 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     except Error as e:
         print(f"Error getting dashboard stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get dashboard statistics")
+
+# PROFILE ENDPOINTS
+class ProfileUpdate(BaseModel):
+    name: str
+    email: str
+
+@router.put("/api/profile", response_model=dict)
+async def update_profile(profile_data: ProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user profile"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if email is already taken by another user
+        cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (profile_data.email, current_user['id']))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already taken by another user")
+        
+        # Update user profile
+        cursor.execute("""
+            UPDATE users 
+            SET name = %s, email = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (profile_data.name, profile_data.email, current_user['id']))
+        
+        # Get updated user data
+        cursor.execute("""
+            SELECT id, email, name, created_at, is_active 
+            FROM users 
+            WHERE id = %s
+        """, (current_user['id'],))
+        
+        updated_user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not updated_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "id": updated_user[0],
+            "email": updated_user[1],
+            "name": updated_user[2],
+            "created_at": updated_user[3],
+            "is_active": updated_user[4]
+        }
+    except Error as e:
+        print(f"Error updating profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+
+@router.delete("/api/profile", response_model=dict)
+async def delete_profile(current_user: dict = Depends(get_current_user)):
+    """Delete user profile and all associated data"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Delete user and all associated data (CASCADE will handle related records)
+        cursor.execute("DELETE FROM users WHERE id = %s", (current_user['id'],))
+        
+        cursor.close()
+        conn.close()
+        
+        return {"message": "Profile deleted successfully"}
+    except Error as e:
+        print(f"Error deleting profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete profile")

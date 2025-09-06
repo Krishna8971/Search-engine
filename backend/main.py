@@ -519,7 +519,7 @@ async def add_cart_item(item: CartItemAdd, current_user: dict = Depends(get_curr
     }
 
 @app.put("/api/cart/update")
-async def update_cart_item(item: CartItemUpdate, current_user: dict = Depends(get_current_user)):
+async def update_cart_item_endpoint(item: CartItemUpdate, current_user: dict = Depends(get_current_user)):
     """Update cart item quantity"""
     success = update_cart_item(current_user["id"], item.product_id, item.quantity)
     if not success:
