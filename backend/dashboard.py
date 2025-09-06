@@ -13,7 +13,7 @@ load_dotenv()
 router = APIRouter()
 security = HTTPBearer()
 
-# Database configuration
+
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'port': int(os.getenv('DB_PORT', 3306)),
@@ -57,7 +57,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Get user from database
+   
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -84,7 +84,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="Failed to get user information"
         )
 
-# Pydantic models
+
 class ListingCreate(BaseModel):
     title: str
     description: str
@@ -121,13 +121,13 @@ class ReviewCreate(BaseModel):
     rating: int
     comment: str
 
-# Initialize database tables
+
 def init_dashboard_tables():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Listings table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS listings (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,7 +149,7 @@ def init_dashboard_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
-        # Messages table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS messages (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -169,7 +169,7 @@ def init_dashboard_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
-        # Orders table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS orders (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -192,7 +192,7 @@ def init_dashboard_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
-        # Reviews table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS reviews (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -219,10 +219,10 @@ def init_dashboard_tables():
         print(f"Error initializing dashboard tables: {e}")
         raise
 
-# Initialize tables when module is imported
+
 init_dashboard_tables()
 
-# LISTINGS ENDPOINTS
+
 @router.get("/api/listings", response_model=dict)
 async def get_all_listings(category: str = None, search: str = None, limit: int = 50, offset: int = 0):
     """Get all active listings for the shop page"""
@@ -230,7 +230,7 @@ async def get_all_listings(category: str = None, search: str = None, limit: int 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Build query with filters
+        
         query = """
             SELECT l.id, l.title, l.description, l.price, l.category, l.condition_type, 
                    l.location, l.images, l.status, l.views, l.created_at, l.updated_at,
@@ -256,7 +256,7 @@ async def get_all_listings(category: str = None, search: str = None, limit: int 
         cursor.execute(query, params)
         listings = cursor.fetchall()
         
-        # Parse images JSON for each listing
+        
         for listing in listings:
             if listing['images']:
                 try:
@@ -267,7 +267,7 @@ async def get_all_listings(category: str = None, search: str = None, limit: int 
             else:
                 listing['images'] = []
         
-        # Get total count for pagination
+       
         count_query = """
             SELECT COUNT(*) as total
             FROM listings l
@@ -307,7 +307,7 @@ async def create_listing(listing: ListingCreate, current_user: dict = Depends(ge
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Convert images list to JSON string for storage
+        
         images_json = None
         if listing.images and len(listing.images) > 0:
             import json
@@ -354,7 +354,7 @@ async def get_my_listings(current_user: dict = Depends(get_current_user)):
         
         listings = cursor.fetchall()
         
-        # Parse images JSON for each listing
+        
         for listing in listings:
             if listing['images']:
                 try:
@@ -380,14 +380,14 @@ async def update_listing(listing_id: int, listing: ListingUpdate, current_user: 
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if listing belongs to user
+        
         cursor.execute("SELECT user_id FROM listings WHERE id = %s", (listing_id,))
         result = cursor.fetchone()
         
         if not result or result[0] != current_user['id']:
             raise HTTPException(status_code=403, detail="Not authorized to update this listing")
         
-        # Build update query dynamically
+        
         update_fields = []
         values = []
         
@@ -395,12 +395,12 @@ async def update_listing(listing_id: int, listing: ListingUpdate, current_user: 
             if value is not None:
                 if field == 'images':
                     update_fields.append(f"{field} = %s")
-                    # Convert images list to JSON string for storage
+                    
                     import json
                     images_json = json.dumps(value) if value else None
                     values.append(images_json)
                 elif field == 'condition':
-                    # Map condition to condition_type in database
+                   
                     update_fields.append(f"condition_type = %s")
                     values.append(value)
                 else:
@@ -429,7 +429,7 @@ async def delete_listing(listing_id: int, current_user: dict = Depends(get_curre
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if listing belongs to user
+        
         cursor.execute("SELECT user_id FROM listings WHERE id = %s", (listing_id,))
         result = cursor.fetchone()
         
@@ -445,7 +445,7 @@ async def delete_listing(listing_id: int, current_user: dict = Depends(get_curre
         print(f"Error deleting listing: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete listing")
 
-# MESSAGES ENDPOINTS
+
 @router.post("/api/messages", response_model=dict)
 async def send_message(message: MessageCreate, current_user: dict = Depends(get_current_user)):
     """Send a message"""
@@ -548,7 +548,7 @@ async def mark_message_read(message_id: int, current_user: dict = Depends(get_cu
         print(f"Error marking message as read: {e}")
         raise HTTPException(status_code=500, detail="Failed to mark message as read")
 
-# ORDERS ENDPOINTS
+
 @router.post("/api/orders", response_model=dict)
 async def create_order(order: OrderCreate, current_user: dict = Depends(get_current_user)):
     """Create a new order"""
@@ -556,7 +556,7 @@ async def create_order(order: OrderCreate, current_user: dict = Depends(get_curr
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get listing details
+        
         cursor.execute("""
             SELECT user_id, price FROM listings 
             WHERE id = %s AND is_active = TRUE
@@ -655,7 +655,7 @@ async def update_order_status(order_id: int, status: str, current_user: dict = D
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if user is the seller
+        
         cursor.execute("""
             SELECT seller_id FROM orders WHERE id = %s
         """, (order_id,))
@@ -676,7 +676,7 @@ async def update_order_status(order_id: int, status: str, current_user: dict = D
         print(f"Error updating order status: {e}")
         raise HTTPException(status_code=500, detail="Failed to update order status")
 
-# REVIEWS ENDPOINTS
+
 @router.post("/api/reviews", response_model=dict)
 async def create_review(review: ReviewCreate, current_user: dict = Depends(get_current_user)):
     """Create a review"""
@@ -684,7 +684,7 @@ async def create_review(review: ReviewCreate, current_user: dict = Depends(get_c
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get listing and seller info
+        
         cursor.execute("""
             SELECT l.user_id, l.title FROM listings l WHERE l.id = %s
         """, (review.listing_id,))
@@ -695,7 +695,7 @@ async def create_review(review: ReviewCreate, current_user: dict = Depends(get_c
         
         seller_id, listing_title = listing
         
-        # Get order_id for this listing (assuming there's an order)
+        
         cursor.execute("""
             SELECT id FROM orders 
             WHERE listing_id = %s AND buyer_id = %s
@@ -714,7 +714,7 @@ async def create_review(review: ReviewCreate, current_user: dict = Depends(get_c
         """, (
             current_user['id'],
             seller_id,
-            seller_id,  # reviewed_user_id is the same as reviewee_id
+            seller_id,  
             order_id,
             review.rating,
             review.comment
@@ -787,7 +787,7 @@ async def get_given_reviews(current_user: dict = Depends(get_current_user)):
         print(f"Error getting given reviews: {e}")
         raise HTTPException(status_code=500, detail="Failed to get reviews")
 
-# DASHBOARD STATS
+
 @router.get("/api/dashboard/stats", response_model=dict)
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     """Get dashboard statistics"""
@@ -795,7 +795,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get counts
+        
         cursor.execute("SELECT COUNT(*) FROM listings WHERE user_id = %s", (current_user['id'],))
         listings_count = cursor.fetchone()[0]
         
@@ -825,7 +825,7 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         print(f"Error getting dashboard stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get dashboard statistics")
 
-# PROFILE ENDPOINTS
+
 class ProfileUpdate(BaseModel):
     name: str
     email: str
@@ -837,21 +837,21 @@ async def update_profile(profile_data: ProfileUpdate, current_user: dict = Depen
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if email is already taken by another user
+        
         cursor.execute("SELECT id FROM users WHERE email = %s AND id != %s", (profile_data.email, current_user['id']))
         existing_user = cursor.fetchone()
         
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already taken by another user")
         
-        # Update user profile
+        
         cursor.execute("""
             UPDATE users 
             SET name = %s, email = %s, updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
         """, (profile_data.name, profile_data.email, current_user['id']))
         
-        # Get updated user data
+        
         cursor.execute("""
             SELECT id, email, name, created_at, is_active 
             FROM users 
@@ -883,7 +883,7 @@ async def delete_profile(current_user: dict = Depends(get_current_user)):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Delete user and all associated data (CASCADE will handle related records)
+        
         cursor.execute("DELETE FROM users WHERE id = %s", (current_user['id'],))
         
         cursor.close()

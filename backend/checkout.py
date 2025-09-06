@@ -13,7 +13,7 @@ load_dotenv()
 
 router = APIRouter()
 
-# Database configuration
+
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'port': int(os.getenv('DB_PORT', 3306)),
@@ -96,7 +96,7 @@ def init_checkout_tables():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Create orders table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS orders (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,7 +115,7 @@ def init_checkout_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
-        # Create order_items table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS order_items (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -140,10 +140,10 @@ def init_checkout_tables():
         print(f"Error initializing checkout tables: {e}")
         raise
 
-# Initialize tables
+
 init_checkout_tables()
 
-# Pydantic models
+
 class OrderItem(BaseModel):
     product_id: int
     quantity: int
@@ -196,13 +196,13 @@ async def process_checkout(
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Calculate total amount
+        
         total_amount = sum(item.price * item.quantity for item in checkout_data.order_items)
         
-        # Generate order number
+        
         order_number = generate_order_number()
         
-        # Create order
+        
         cursor.execute("""
             INSERT INTO orders (user_id, order_number, total_amount, shipping_address, payment_info)
             VALUES (%s, %s, %s, %s, %s)
@@ -216,7 +216,7 @@ async def process_checkout(
         
         order_id = cursor.lastrowid
         
-        # Create order items
+        
         for item in checkout_data.order_items:
             total_price = item.price * item.quantity
             cursor.execute("""
@@ -230,7 +230,7 @@ async def process_checkout(
                 total_price
             ))
         
-        # Clear user's cart after successful order
+        
         cursor.execute("DELETE FROM cart_items WHERE user_id = %s", (current_user["id"],))
         
         conn.commit()
@@ -270,7 +270,7 @@ async def get_user_orders(current_user: dict = Depends(get_current_user)):
         
         orders = cursor.fetchall()
         
-        # Process orders to convert JSON fields
+        
         for order in orders:
             if order.get('created_at'):
                 order['created_at'] = str(order['created_at'])
@@ -304,7 +304,7 @@ async def get_order_details(
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Get order details
+        
         cursor.execute("""
             SELECT o.id, o.order_number, o.status, o.total_amount, o.created_at,
                    o.shipping_address, o.payment_info
@@ -320,7 +320,7 @@ async def get_order_details(
                 detail="Order not found"
             )
         
-        # Get order items
+        
         cursor.execute("""
             SELECT oi.id, oi.listing_id, oi.quantity, oi.unit_price, oi.total_price,
                    l.title, l.images, u.name as seller_name
@@ -332,10 +332,10 @@ async def get_order_details(
         
         items = cursor.fetchall()
         
-        # Process order items
+        
         order_items = []
         for item in items:
-            # Parse images to get first image
+            
             image = None
             if item.get('images'):
                 try:
@@ -356,7 +356,7 @@ async def get_order_details(
                 "seller_name": item['seller_name'] or "Unknown Seller"
             })
         
-        # Process order data
+        
         if order.get('created_at'):
             order['created_at'] = str(order['created_at'])
         if order.get('shipping_address'):
@@ -399,7 +399,7 @@ async def update_order_status(
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if order exists and belongs to user
+        
         cursor.execute("""
             SELECT id FROM orders 
             WHERE id = %s AND user_id = %s
@@ -411,7 +411,7 @@ async def update_order_status(
                 detail="Order not found"
             )
         
-        # Update status
+        
         cursor.execute("""
             UPDATE orders 
             SET status = %s, updated_at = CURRENT_TIMESTAMP

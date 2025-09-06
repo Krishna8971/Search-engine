@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+
 app.include_router(dashboard_router)
 app.include_router(checkout_router)
 
@@ -77,7 +77,7 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
-        # Create cart table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cart_items (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -314,7 +314,7 @@ async def login(user_credentials: UserLogin):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Create JWT token directly
+    
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": user["email"], "exp": expire}
     access_token = pyjwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -344,7 +344,7 @@ async def get_users(current_user: dict = Depends(get_current_user)):
     users = get_all_users()
     return {"users": users}
 
-# Cart functions
+
 def get_cart_items(user_id: int):
     try:
         conn = get_db_connection()
@@ -362,10 +362,10 @@ def get_cart_items(user_id: int):
         cursor.close()
         conn.close()
         
-        # Process items
+        
         cart_items = []
         for item in items:
-            # Parse images to get first image
+            
             image = None
             if item.get('images'):
                 try:
@@ -396,7 +396,7 @@ def add_to_cart(user_id: int, product_id: int, quantity: int = 1):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if item already exists in cart
+        
         cursor.execute("""
             SELECT id, quantity FROM cart_items 
             WHERE user_id = %s AND listing_id = %s
@@ -404,14 +404,14 @@ def add_to_cart(user_id: int, product_id: int, quantity: int = 1):
         existing_item = cursor.fetchone()
         
         if existing_item:
-            # Update quantity
+            
             new_quantity = existing_item[1] + quantity
             cursor.execute("""
                 UPDATE cart_items SET quantity = %s, updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
             """, (new_quantity, existing_item[0]))
         else:
-            # Add new item
+            
             cursor.execute("""
                 INSERT INTO cart_items (user_id, listing_id, quantity)
                 VALUES (%s, %s, %s)
@@ -431,13 +431,13 @@ def update_cart_item(user_id: int, product_id: int, quantity: int):
         cursor = conn.cursor()
         
         if quantity <= 0:
-            # Remove item if quantity is 0 or negative
+            
             cursor.execute("""
                 DELETE FROM cart_items 
                 WHERE user_id = %s AND listing_id = %s
             """, (user_id, product_id))
         else:
-            # Update quantity
+            
             cursor.execute("""
                 UPDATE cart_items 
                 SET quantity = %s, updated_at = CURRENT_TIMESTAMP
@@ -487,7 +487,7 @@ def clear_cart(user_id: int):
         print(f"Error clearing cart: {e}")
         return False
 
-# Cart API endpoints
+
 @app.get("/api/cart", response_model=CartResponse)
 async def get_cart(current_user: dict = Depends(get_current_user)):
     """Get user's cart items"""
@@ -508,7 +508,7 @@ async def add_cart_item(item: CartItemAdd, current_user: dict = Depends(get_curr
     if not success:
         raise HTTPException(status_code=500, detail="Failed to add item to cart")
     
-    # Return updated cart
+   
     items = get_cart_items(current_user["id"])
     total = sum(item["price"] * item["quantity"] for item in items)
     items_count = sum(item["quantity"] for item in items)
@@ -527,7 +527,7 @@ async def update_cart_item_endpoint(item: CartItemUpdate, current_user: dict = D
     if not success:
         raise HTTPException(status_code=500, detail="Failed to update cart item")
     
-    # Return updated cart
+  
     items = get_cart_items(current_user["id"])
     total = sum(item["price"] * item["quantity"] for item in items)
     items_count = sum(item["quantity"] for item in items)
@@ -546,7 +546,7 @@ async def remove_cart_item(item: CartItemRemove, current_user: dict = Depends(ge
     if not success:
         raise HTTPException(status_code=500, detail="Failed to remove item from cart")
     
-    # Return updated cart
+    
     items = get_cart_items(current_user["id"])
     total = sum(item["price"] * item["quantity"] for item in items)
     items_count = sum(item["quantity"] for item in items)
