@@ -48,6 +48,48 @@ const Shop = () => {
     }
   };
 
+  // Helper function to safely get all images
+  const getAllImages = (images) => {
+    if (!images) return [];
+    
+    try {
+      // If images is already an array, return it
+      if (Array.isArray(images)) {
+        return images;
+      }
+      
+      // If images is a string, try to parse it
+      if (typeof images === 'string') {
+        const parsedImages = JSON.parse(images);
+        return Array.isArray(parsedImages) ? parsedImages : [];
+      }
+      
+      return [];
+    } catch (error) {
+      console.warn('Error parsing images:', error);
+      return [];
+    }
+  };
+
+  // Handle view details
+  const handleViewDetails = (listing) => {
+    setSelectedListing(listing);
+    setSelectedImageIndex(0);
+    setShowDetailsModal(true);
+  };
+
+  // Handle image selection
+  const handleImageSelect = (index) => {
+    setSelectedImageIndex(index);
+  };
+
+  // Close modal
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedListing(null);
+    setSelectedImageIndex(0);
+  };
+
   // Handle URL parameters for category filtering
   useEffect(() => {
     const categoryParam = searchParams.get('category');
@@ -364,7 +406,10 @@ const Shop = () => {
                     
                     <div className="product-footer">
                       <span className="product-price">${parseFloat(listing.price).toFixed(2)}</span>
-                      <button className="view-details-btn">
+                      <button 
+                        className="view-details-btn"
+                        onClick={() => handleViewDetails(listing)}
+                      >
                         View Details
                       </button>
                     </div>
@@ -393,6 +438,110 @@ const Shop = () => {
             {/* Pagination */}
             {renderPagination()}
           </>
+        )}
+
+        {/* Product Details Modal */}
+        {showDetailsModal && selectedListing && (
+          <div className="product-details-modal" onClick={closeDetailsModal}>
+            <div className="product-details-content" onClick={(e) => e.stopPropagation()}>
+              <div className="product-details-header">
+                <h2 className="product-details-title">{selectedListing.title}</h2>
+                <button className="product-details-close" onClick={closeDetailsModal}>
+                  ×
+                </button>
+              </div>
+              
+              <div className="product-details-body">
+                <div className="product-details-images">
+                  {getAllImages(selectedListing.images).length > 0 ? (
+                    <>
+                      <img
+                        src={getAllImages(selectedListing.images)[selectedImageIndex]}
+                        alt={selectedListing.title}
+                        className="product-details-main-image"
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/400x400?text=${encodeURIComponent(selectedListing.title)}`;
+                        }}
+                      />
+                      {getAllImages(selectedListing.images).length > 1 && (
+                        <div className="product-details-thumbnails">
+                          {getAllImages(selectedListing.images).map((image, index) => (
+                            <img
+                              key={index}
+                              src={image}
+                              alt={`${selectedListing.title} ${index + 1}`}
+                              className={`product-details-thumbnail ${index === selectedImageIndex ? 'active' : ''}`}
+                              onClick={() => handleImageSelect(index)}
+                              onError={(e) => {
+                                e.target.src = `https://via.placeholder.com/80x80?text=${encodeURIComponent(selectedListing.title)}`;
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="product-details-main-image" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'var(--surface-light)',
+                      fontSize: '4rem',
+                      color: 'var(--text-muted)'
+                    }}>
+                      📦
+                    </div>
+                  )}
+                </div>
+                
+                <div className="product-details-info">
+                  <div className="product-details-category">{selectedListing.category}</div>
+                  <h1 className="product-details-price">${parseFloat(selectedListing.price).toFixed(2)}</h1>
+                  <p className="product-details-description">{selectedListing.description}</p>
+                  
+                  <div className="product-details-specs">
+                    <div className="product-details-spec">
+                      <span className="product-details-spec-label">Condition</span>
+                      <span className="product-details-spec-value">{selectedListing.condition_type}</span>
+                    </div>
+                    <div className="product-details-spec">
+                      <span className="product-details-spec-label">Location</span>
+                      <span className="product-details-spec-value">{selectedListing.location}</span>
+                    </div>
+                    <div className="product-details-spec">
+                      <span className="product-details-spec-label">Views</span>
+                      <span className="product-details-spec-value">{selectedListing.views || 0}</span>
+                    </div>
+                    <div className="product-details-spec">
+                      <span className="product-details-spec-label">Listed</span>
+                      <span className="product-details-spec-value">
+                        {new Date(selectedListing.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="product-details-seller">
+                    <div className="product-details-seller-avatar">
+                      {selectedListing.seller_name ? selectedListing.seller_name.charAt(0).toUpperCase() : 'S'}
+                    </div>
+                    <div className="product-details-seller-info">
+                      <h4>{selectedListing.seller_name}</h4>
+                      <p>Seller</p>
+                    </div>
+                  </div>
+                  
+                  <div className="product-details-actions">
+                    <button className="product-details-btn product-details-btn-primary">
+                      Contact Seller
+                    </button>
+                    <button className="product-details-btn product-details-btn-secondary">
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       <Footer />
