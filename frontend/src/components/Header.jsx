@@ -58,26 +58,18 @@ const Header = () => {
           </div>
         </nav>
 
-        {/* Actions (Profile, Cart, Search) */}
+        {/* Actions (Login/Dashboard, Cart) */}
         <div className="flex items-center" style={{ gap: 'var(--spacing-md)' }}>
-          {/* Profile */}
-          <div onClick={() => navigate(isAuthenticated ? "/dashboard" : "/login")} style={{ cursor: "pointer" }}>
-            👤
-          </div>
+          {isAuthenticated ? (
+            <button onClick={() => navigate('/dashboard')} className="btn btn-primary btn-sm header-desktop-action">Dashboard</button>
+          ) : (
+            <button onClick={() => navigate('/login')} className="btn btn-primary btn-sm header-desktop-action">Login</button>
+          )}
 
           {/* Cart */}
-          <div onClick={() => navigate("/cart")} style={{ cursor: "pointer" }}>
+          <div onClick={() => navigate("/cart")} style={{ cursor: "pointer", fontSize: '1.5rem', lineHeight: 1 }}>
             🛒
           </div>
-
-          {/* Search Button */}
-          <button 
-            aria-label="Search" 
-            className="btn btn-secondary"
-            style={{ padding: '0.5rem' }}
-          >
-            🔍
-          </button>
         </div>
       </div>
 
