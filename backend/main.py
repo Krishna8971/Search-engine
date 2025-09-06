@@ -10,6 +10,7 @@ from mysql.connector import Error
 import os
 from typing import Optional
 from dotenv import load_dotenv
+from dashboard import router as dashboard_router
 
 load_dotenv()
 
@@ -22,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include dashboard router
+app.include_router(dashboard_router)
 
 SECRET_KEY = os.getenv('SECRET_KEY',)
 ALGORITHM = "HS256"

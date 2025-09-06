@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/global.css';
 
-const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
+const Home = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -15,51 +19,40 @@ const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      <Header onLoginClick={onLoginClick} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
 
       {/* Hero Section */}
-      <section style={{
+      <section className="text-white" style={{
         background: 'linear-gradient(135deg, var(--primary-color), var(--primary-dark))',
-        color: 'white',
         padding: '4rem 0'
       }}>
         <div className="container text-center">
-          <h1 style={{ 
-            fontSize: '3rem', 
-            fontWeight: 'bold', 
-            marginBottom: 'var(--spacing-lg)',
+          <h1 className="font-bold mb-lg" style={{ 
+            fontSize: 'clamp(2rem, 5vw, 3rem)',
             textShadow: '0 2px 4px rgba(0,0,0,0.3)'
           }}>
             Buy & Sell Second-Hand Items
           </h1>
-          <p style={{ 
-            fontSize: 'var(--font-size-lg)', 
-            marginBottom: 'var(--spacing-2xl)',
+          <p className="text-lg mb-xl" style={{ 
             opacity: 0.9
           }}>
             Your trusted marketplace for quality pre-loved items at great prices
           </p>
           
           {/* Search Box */}
-          <form onSubmit={handleSearch} style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div className="flex" style={{ gap: 'var(--spacing-sm)' }}>
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
-                className="form-input"
+                className="form-input flex-1 text-lg p-4"
                 placeholder="Search for electronics, furniture, clothes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ 
-                  flex: 1,
-                  fontSize: 'var(--font-size-lg)',
-                  padding: 'var(--spacing-md)'
-                }}
               />
               <button 
                 type="submit"
-                className="btn btn-accent"
-                style={{ fontSize: 'var(--font-size-lg)', padding: '0 var(--spacing-xl)' }}
+                className="btn btn-accent btn-lg px-8"
               >
                 Search
               </button>
@@ -69,146 +62,66 @@ const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
       </section>
 
       {/* Featured Categories */}
-      <section style={{ padding: '4rem 0' }}>
+      <section className="py-16">
         <div className="container">
-          <div className="text-center" style={{ marginBottom: 'var(--spacing-2xl)' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: 'var(--spacing-md)' }}>
+          <div className="text-center mb-xl">
+            <h2 className="font-bold mb-md" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
               Popular Categories
             </h2>
-            <p style={{ fontSize: 'var(--font-size-lg)', color: 'var(--text-secondary)' }}>
+            <p className="text-lg text-secondary">
               Discover amazing deals in these top categories
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: 'var(--spacing-xl)'
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Category 1 */}
-            <div style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              backgroundColor: 'var(--surface-color)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-md)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s ease'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--spacing-md)',
-                color: 'var(--primary-color)',
-                fontSize: '2.5rem'
-              }}>
+            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+              <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 📱
               </div>
-              <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'bold', marginBottom: 'var(--spacing-sm)' }}>
+              <h3 className="text-lg font-bold mb-sm">
                 Electronics
               </h3>
-              <p style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-secondary">
                 Phones, laptops, cameras and more tech items in great condition.
               </p>
             </div>
 
             {/* Category 2 */}
-            <div style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              backgroundColor: 'var(--surface-color)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-md)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s ease'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--spacing-md)',
-                color: 'var(--primary-color)',
-                fontSize: '2.5rem'
-              }}>
+            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+              <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 🪑
               </div>
-              <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'bold', marginBottom: 'var(--spacing-sm)' }}>
+              <h3 className="text-lg font-bold mb-sm">
                 Furniture
               </h3>
-              <p style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-secondary">
                 Quality furniture for your home, office, and outdoor spaces.
               </p>
             </div>
 
             {/* Category 3 */}
-            <div style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              backgroundColor: 'var(--surface-color)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-md)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s ease'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--spacing-md)',
-                color: 'var(--primary-color)',
-                fontSize: '2.5rem'
-              }}>
+            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+              <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 👕
               </div>
-              <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'bold', marginBottom: 'var(--spacing-sm)' }}>
+              <h3 className="text-lg font-bold mb-sm">
                 Fashion
               </h3>
-              <p style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-secondary">
                 Trendy clothes, shoes, and accessories for all styles.
               </p>
             </div>
 
             {/* Category 4 */}
-            <div style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              backgroundColor: 'var(--surface-color)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-md)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s ease'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                backgroundColor: 'var(--primary-light)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--spacing-md)',
-                color: 'var(--primary-color)',
-                fontSize: '2.5rem'
-              }}>
+            <div className="text-center bg-white rounded-lg shadow-md p-8 cursor-pointer hover:transform hover:-translate-y-1 transition-transform">
+              <div className="w-20 h-20 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-md text-primary text-4xl">
                 🚗
               </div>
-              <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'bold', marginBottom: 'var(--spacing-sm)' }}>
+              <h3 className="text-lg font-bold mb-sm">
                 Vehicles
               </h3>
-              <p style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-secondary">
                 Cars, bikes, and other vehicles from trusted sellers.
               </p>
             </div>
@@ -217,22 +130,18 @@ const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
       </section>
 
       {/* Features Section */}
-      <section style={{ padding: '4rem 0', backgroundColor: 'var(--surface-light)' }}>
+      <section className="py-16 bg-surface-light">
         <div className="container">
-          <div className="text-center" style={{ marginBottom: 'var(--spacing-2xl)' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: 'var(--spacing-md)' }}>
+          <div className="text-center mb-xl">
+            <h2 className="font-bold mb-md" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
               Why Choose SecondMarket?
             </h2>
-            <p style={{ fontSize: 'var(--font-size-lg)', color: 'var(--text-secondary)' }}>
+            <p className="text-lg text-secondary">
               The best platform for buying and selling second-hand items
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: 'var(--spacing-xl)'
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div style={{
               textAlign: 'center',
@@ -327,32 +236,24 @@ const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
       </section>
 
       {/* CTA Section */}
-      <section style={{
-        backgroundColor: 'var(--surface-color)',
-        borderTop: '1px solid var(--border-color)',
-        padding: '4rem 0'
-      }}>
+      <section className="bg-white border-t py-16">
         <div className="container text-center">
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: 'var(--spacing-md)' }}>
+          <h2 className="font-bold mb-md" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}>
             Ready to Start Trading?
           </h2>
-          <p style={{ 
-            fontSize: 'var(--font-size-lg)', 
-            color: 'var(--text-secondary)', 
-            marginBottom: 'var(--spacing-xl)' 
-          }}>
+          <p className="text-lg text-secondary mb-xl">
             Join thousands of users buying and selling on SecondMarket
           </p>
-          <div className="flex justify-center" style={{ gap: 'var(--spacing-md)' }}>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button 
               className="btn btn-primary btn-lg"
-              onClick={onLoginClick}
+              onClick={() => navigate('/shop')}
             >
               Start Buying
             </button>
             <button 
               className="btn btn-accent btn-lg"
-              onClick={onLoginClick}
+              onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
             >
               Start Selling
             </button>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-const Contact = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
+const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,7 +34,7 @@ const Contact = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+  <Header />
       
       {/* Header Section */}
       <div className="bg-white shadow-sm">

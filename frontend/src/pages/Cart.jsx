@@ -2,20 +2,20 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
+const Cart = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+      <Header />
       
       {/* Header Section */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-800">Shopping Cart</h1>
+        <div className="container py-8">
+          <h1 className="text-3xl font-bold text-primary">Shopping Cart</h1>
         </div>
       </div>
 
       {/* Empty Cart Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="container py-16">
         <div className="text-center">
           {/* Cart Icon */}
           <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
@@ -35,26 +35,26 @@ const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
           </div>
 
           {/* Empty Message */}
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          <h2 className="text-2xl font-semibold text-primary mb-4">
             Your Cart is Empty
           </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+          <p className="text-secondary mb-8 max-w-md mx-auto">
             Looks like you haven't added anything to your cart yet. Start shopping to fill it up!
           </p>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+            <button className="btn btn-primary btn-lg px-8">
               Continue Shopping
             </button>
-            <button className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">
+            <button className="btn btn-secondary btn-lg px-8">
               View Wishlist
             </button>
           </div>
 
           {/* Recently Viewed or Recommendations */}
           <div className="mt-16">
-            <h3 className="text-xl font-semibold text-gray-800 mb-6">
+            <h3 className="text-xl font-semibold text-primary mb-6">
               You Might Like These
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -69,11 +69,11 @@ const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
                     />
                   </div>
                   <div className="p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">
+                    <h4 className="font-semibold text-primary mb-2">
                       Recommended Product {item}
                     </h4>
-                    <p className="text-blue-600 font-bold mb-3">$99.99</p>
-                    <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                    <p className="text-primary font-bold mb-3">$99.99</p>
+                    <button className="btn btn-primary btn-full">
                       Add to Cart
                     </button>
                   </div>
@@ -87,19 +87,19 @@ const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
       {/* Cart Summary Sidebar (for when cart has items) */}
       <div className="hidden">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
+          <h3 className="text-lg font-semibold text-primary mb-4">Order Summary</h3>
           
           <div className="space-y-3 mb-6">
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal</span>
+              <span className="text-secondary">Subtotal</span>
               <span className="font-medium">$0.00</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Shipping</span>
+              <span className="text-secondary">Shipping</span>
               <span className="font-medium">Free</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tax</span>
+              <span className="text-secondary">Tax</span>
               <span className="font-medium">$0.00</span>
             </div>
             <div className="border-t pt-3">
@@ -110,7 +110,7 @@ const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
             </div>
           </div>
 
-          <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+          <button className="btn btn-primary btn-full">
             Proceed to Checkout
           </button>
         </div>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext';
 
-const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
+const Shop = () => {
+  useAuth();
   // Sample product data
   const [products] = useState([
     {
@@ -88,20 +90,20 @@ const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+      <Header />
       
       {/* Header Section */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Shop Our Products</h1>
-          <p className="text-gray-600">Discover our amazing collection of products</p>
+        <div className="container py-8">
+          <h1 className="text-3xl font-bold text-primary mb-4">Shop Our Products</h1>
+          <p className="text-secondary">Discover our amazing collection of products</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container py-8">
         {/* Category Filter */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Filter by Category</h3>
+          <h3 className="text-lg font-semibold text-primary mb-4">Filter by Category</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
@@ -109,8 +111,8 @@ const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
                   selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-primary hover:bg-gray-100 border border-gray-300'
                 }`}
               >
                 {category}
@@ -135,18 +137,18 @@ const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
               {/* Product Info */}
               <div className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-blue-600 font-medium">{product.category}</span>
+                  <span className="text-sm text-primary font-medium">{product.category}</span>
                   <div className="flex items-center">
                     {renderStars(product.rating)}
-                    <span className="ml-1 text-sm text-gray-600">({product.rating})</span>
+                    <span className="ml-1 text-sm text-secondary">({product.rating})</span>
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h3>
+                <h3 className="text-lg font-semibold text-primary mb-2">{product.name}</h3>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-blue-600">${product.price}</span>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                  <span className="text-2xl font-bold text-primary">${product.price}</span>
+                  <button className="btn btn-primary btn-sm">
                     Add to Cart
                   </button>
                 </div>
@@ -158,7 +160,7 @@ const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) =
         {/* No Products Message */}
         {filteredProducts.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-gray-500 text-lg">No products found in this category.</p>
+            <p className="text-secondary text-lg">No products found in this category.</p>
           </div>
         )}
       </div>

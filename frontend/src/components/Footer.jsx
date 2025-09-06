@@ -3,12 +3,7 @@ import '../styles/global.css';
 
 const Footer = () => {
   return (
-    <footer style={{
-      backgroundColor: 'var(--surface-dark)',
-      color: 'var(--text-secondary)',
-      padding: 'var(--spacing-xl) 0',
-      textAlign: 'center'
-    }}>
+    <footer className="bg-surface-dark text-secondary py-xl text-center">
       <div className="container">
         <p>&copy; {new Date().getFullYear()} SecondMarket. Your trusted second-hand marketplace.</p>
       </div>

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/global.css';
 import '../styles/auth.css';
+import { useAuth } from '../context/AuthContext';
 
-const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, user, onNavigation }) => {
+const Login = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -58,7 +62,7 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, us
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/login', {
+  const response = await fetch('http://localhost:8000/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,14 +77,10 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, us
       }
 
       
-      localStorage.setItem('access_token', data.access_token);
-      
-      setMessage('Login successful!');
-      
-    
-      if (onLoginSuccess) {
-        onLoginSuccess(data);
-      }
+  localStorage.setItem('access_token', data.access_token);
+  setMessage('Login successful!');
+  login(data.access_token, data.user);
+  setTimeout(() => navigate('/'), 300);
 
     } catch (error) {
       setMessage(error.message || 'An error occurred during login');
@@ -91,7 +91,7 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, us
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      <Header onLoginClick={() => {}} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
+  <Header />
       <div className="auth-container">
         <div className="auth-card">
         <div className="auth-header">
@@ -161,24 +161,22 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, us
           <button
             type="button"
             className="auth-link"
-            onClick={onToggleMode}
+            onClick={() => navigate('/register')}
             disabled={loading}
           >
             Sign up here
           </button>
           
-          {onBackToHome && (
-            <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'center' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onBackToHome}
-                disabled={loading}
-              >
-                ← Back to Home
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'center' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => navigate('/')}
+              disabled={loading}
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
       </div>
       </div>

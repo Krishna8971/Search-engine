@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/global.css';
 import '../styles/auth.css';
 
-const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticated, user, onNavigation }) => {
+const Register = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -92,7 +96,6 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticat
 
       setMessage('Registration successful! You can now sign in.');
       
-      
       setFormData({
         name: '',
         email: '',
@@ -100,16 +103,9 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticat
         confirmPassword: ''
       });
 
-      
-      if (onRegisterSuccess) {
-        onRegisterSuccess(data);
-      }
-
-      
+      // Navigate to login page after successful registration
       setTimeout(() => {
-        if (onToggleMode) {
-          onToggleMode();
-        }
+        navigate('/login');
       }, 2000);
 
     } catch (error) {
@@ -121,7 +117,7 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticat
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      <Header onLoginClick={() => {}} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
+  <Header />
       <div className="auth-container">
         <div className="auth-card">
         <div className="auth-header">
@@ -225,24 +221,22 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticat
           <button
             type="button"
             className="auth-link"
-            onClick={onToggleMode}
+            onClick={() => navigate('/login')}
             disabled={loading}
           >
             Sign in here
           </button>
           
-          {onBackToHome && (
-            <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'center' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onBackToHome}
-                disabled={loading}
-              >
-                ← Back to Home
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: 'var(--spacing-md)', textAlign: 'center' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => navigate('/')}
+              disabled={loading}
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
       </div>
       </div>
