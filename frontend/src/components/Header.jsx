@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import '../styles/global.css';
 
 const navLinkStyle = ({ isActive }) => ({
@@ -16,6 +17,7 @@ const navLinkStyle = ({ isActive }) => ({
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { cartItemsCount } = useCart();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -67,8 +69,38 @@ const Header = () => {
           )}
 
           {/* Cart */}
-          <div onClick={() => navigate("/cart")} style={{ cursor: "pointer", fontSize: '1.5rem', lineHeight: 1 }}>
+          <div 
+            onClick={() => navigate("/cart")} 
+            style={{ 
+              cursor: "pointer", 
+              fontSize: '1.5rem', 
+              lineHeight: 1,
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
             🛒
+            {cartItemsCount > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                backgroundColor: 'var(--primary-color)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '20px'
+              }}>
+                {cartItemsCount > 99 ? '99+' : cartItemsCount}
+              </span>
+            )}
           </div>
         </div>
       </div>

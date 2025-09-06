@@ -314,18 +314,18 @@ async def create_listing(listing: ListingCreate, current_user: dict = Depends(ge
             images_json = json.dumps(listing.images)
         
         cursor.execute("""
-            INSERT INTO listings (user_id, seller_id, title, description, price, category, condition_type, location, images)
+            INSERT INTO listings (user_id, title, description, price, category, condition_type, location, images, seller_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             current_user['id'],
-            current_user['id'],  # seller_id is the same as user_id
             listing.title,
             listing.description,
             listing.price,
             listing.category,
             listing.condition,
             listing.location,
-            images_json
+            images_json,
+            current_user['id']
         ))
         
         listing_id = cursor.lastrowid

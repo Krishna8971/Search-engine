@@ -3,11 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import '../styles/Shop.css';
 
 const Shop = () => {
   useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { addToCart, isInCart, getItemQuantity } = useCart();
   
   // State for listings and UI
   const [listings, setListings] = useState([]);
@@ -21,6 +23,8 @@ const Shop = () => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [addingToCart, setAddingToCart] = useState(new Set());
+  const [notification, setNotification] = useState(null);
   
   const categories = ['All', 'Electronics', 'Furniture', 'Fashion', 'Vehicles', 'Sports', 'Home', 'Accessories', 'Books'];
   const itemsPerPage = 12;
@@ -88,6 +92,34 @@ const Shop = () => {
     setShowDetailsModal(false);
     setSelectedListing(null);
     setSelectedImageIndex(0);
+  };
+
+  // Show notification
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Handle add to cart
+  const handleAddToCart = async (listing) => {
+    setAddingToCart(prev => new Set([...prev, listing.id]));
+    
+    try {
+      const result = await addToCart(listing);
+      if (result.success) {
+        showNotification(result.message);
+      } else {
+        showNotification(result.message, 'error');
+      }
+    } catch (err) {
+      showNotification('Failed to add item to cart', 'error');
+    } finally {
+      setAddingToCart(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(listing.id);
+        return newSet;
+      });
+    }
   };
 
   // Handle URL parameters for category filtering
@@ -267,6 +299,16 @@ const Shop = () => {
     <div className="shop-container">
       <Header />
       
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+          notification.type === 'error' ? 'bg-red-500' : 
+          notification.type === 'info' ? 'bg-blue-500' : 'bg-green-500'
+        } text-white`}>
+          {notification.message}
+        </div>
+      )}
+      
       {/* Header Section */}
       <div className="shop-header">
         <div className="container shop-header-content">
@@ -406,12 +448,29 @@ const Shop = () => {
                     
                     <div className="product-footer">
                       <span className="product-price">${parseFloat(listing.price).toFixed(2)}</span>
-                      <button 
-                        className="view-details-btn"
-                        onClick={() => handleViewDetails(listing)}
-                      >
-                        View Details
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          className="view-details-btn"
+                          onClick={() => handleViewDetails(listing)}
+                        >
+                          View Details
+                        </button>
+                        <button 
+                          className={`add-to-cart-btn ${
+                            isInCart(listing.id) ? 'in-cart' : ''
+                          }`}
+                          onClick={() => handleAddToCart(listing)}
+                          disabled={addingToCart.has(listing.id)}
+                        >
+                          {addingToCart.has(listing.id) ? (
+                            'Adding...'
+                          ) : isInCart(listing.id) ? (
+                            `In Cart (${getItemQuantity(listing.id)})`
+                          ) : (
+                            'Add to Cart'
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -534,8 +593,20 @@ const Shop = () => {
                     <button className="product-details-btn product-details-btn-primary">
                       Contact Seller
                     </button>
-                    <button className="product-details-btn product-details-btn-secondary">
-                      Add to Cart
+                    <button 
+                      className={`product-details-btn product-details-btn-secondary ${
+                        isInCart(selectedListing.id) ? 'in-cart' : ''
+                      }`}
+                      onClick={() => handleAddToCart(selectedListing)}
+                      disabled={addingToCart.has(selectedListing.id)}
+                    >
+                      {addingToCart.has(selectedListing.id) ? (
+                        'Adding...'
+                      ) : isInCart(selectedListing.id) ? (
+                        `In Cart (${getItemQuantity(selectedListing.id)})`
+                      ) : (
+                        'Add to Cart'
+                      )}
                     </button>
                   </div>
                 </div>

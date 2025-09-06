@@ -75,6 +75,23 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
         
+        # Create cart table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS cart_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                listing_id INT NOT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_user_listing (user_id, listing_id),
+                INDEX idx_cart_user (user_id),
+                INDEX idx_cart_listing (listing_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ''')
+        
         conn.commit()
         cursor.close()
         conn.close()
@@ -106,6 +123,32 @@ class User(BaseModel):
     email: str
     created_at: str
     is_active: bool
+
+class CartItemAdd(BaseModel):
+    product_id: int
+    quantity: int = 1
+
+class CartItemUpdate(BaseModel):
+    product_id: int
+    quantity: int
+
+class CartItemRemove(BaseModel):
+    product_id: int
+
+class CartItem(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    title: str
+    price: float
+    image: Optional[str] = None
+    seller_name: str
+    created_at: str
+
+class CartResponse(BaseModel):
+    items: list[CartItem]
+    total: float
+    items_count: int
 
 
 def hash_password(password: str) -> str:
@@ -298,6 +341,234 @@ async def get_users(current_user: dict = Depends(get_current_user)):
     
     users = get_all_users()
     return {"users": users}
+
+# Cart functions
+def get_cart_items(user_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT ci.id, ci.listing_id as product_id, ci.quantity, ci.created_at,
+                   l.title, l.price, l.images, u.name as seller_name
+            FROM cart_items ci
+            LEFT JOIN listings l ON ci.listing_id = l.id
+            LEFT JOIN users u ON l.user_id = u.id
+            WHERE ci.user_id = %s
+            ORDER BY ci.created_at DESC
+        """, (user_id,))
+        items = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Process items
+        cart_items = []
+        for item in items:
+            # Parse images to get first image
+            image = None
+            if item.get('images'):
+                try:
+                    images = item['images'] if isinstance(item['images'], list) else eval(item['images'])
+                    if images and len(images) > 0:
+                        image = images[0]
+                except:
+                    pass
+            
+            cart_items.append({
+                "id": item['id'],
+                "product_id": item['product_id'],
+                "quantity": item['quantity'],
+                "title": item['title'] or "Unknown Product",
+                "price": float(item['price']) if item['price'] else 0.0,
+                "image": image,
+                "seller_name": item['seller_name'] or "Unknown Seller",
+                "created_at": str(item['created_at'])
+            })
+        
+        return cart_items
+    except Error as e:
+        print(f"Error getting cart items: {e}")
+        return []
+
+def add_to_cart(user_id: int, product_id: int, quantity: int = 1):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if item already exists in cart
+        cursor.execute("""
+            SELECT id, quantity FROM cart_items 
+            WHERE user_id = %s AND listing_id = %s
+        """, (user_id, product_id))
+        existing_item = cursor.fetchone()
+        
+        if existing_item:
+            # Update quantity
+            new_quantity = existing_item[1] + quantity
+            cursor.execute("""
+                UPDATE cart_items SET quantity = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (new_quantity, existing_item[0]))
+        else:
+            # Add new item
+            cursor.execute("""
+                INSERT INTO cart_items (user_id, listing_id, quantity)
+                VALUES (%s, %s, %s)
+            """, (user_id, product_id, quantity))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error adding to cart: {e}")
+        return False
+
+def update_cart_item(user_id: int, product_id: int, quantity: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if quantity <= 0:
+            # Remove item if quantity is 0 or negative
+            cursor.execute("""
+                DELETE FROM cart_items 
+                WHERE user_id = %s AND listing_id = %s
+            """, (user_id, product_id))
+        else:
+            # Update quantity
+            cursor.execute("""
+                UPDATE cart_items 
+                SET quantity = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = %s AND listing_id = %s
+            """, (quantity, user_id, product_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error updating cart item: {e}")
+        return False
+
+def remove_from_cart(user_id: int, product_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            DELETE FROM cart_items 
+            WHERE user_id = %s AND listing_id = %s
+        """, (user_id, product_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error removing from cart: {e}")
+        return False
+
+def clear_cart(user_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            DELETE FROM cart_items WHERE user_id = %s
+        """, (user_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error clearing cart: {e}")
+        return False
+
+# Cart API endpoints
+@app.get("/api/cart", response_model=CartResponse)
+async def get_cart(current_user: dict = Depends(get_current_user)):
+    """Get user's cart items"""
+    items = get_cart_items(current_user["id"])
+    total = sum(item["price"] * item["quantity"] for item in items)
+    items_count = sum(item["quantity"] for item in items)
+    
+    return {
+        "items": items,
+        "total": total,
+        "items_count": items_count
+    }
+
+@app.post("/api/cart/add")
+async def add_cart_item(item: CartItemAdd, current_user: dict = Depends(get_current_user)):
+    """Add item to cart"""
+    success = add_to_cart(current_user["id"], item.product_id, item.quantity)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to add item to cart")
+    
+    # Return updated cart
+    items = get_cart_items(current_user["id"])
+    total = sum(item["price"] * item["quantity"] for item in items)
+    items_count = sum(item["quantity"] for item in items)
+    
+    return {
+        "message": "Item added to cart successfully",
+        "items": items,
+        "total": total,
+        "items_count": items_count
+    }
+
+@app.put("/api/cart/update")
+async def update_cart_item(item: CartItemUpdate, current_user: dict = Depends(get_current_user)):
+    """Update cart item quantity"""
+    success = update_cart_item(current_user["id"], item.product_id, item.quantity)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update cart item")
+    
+    # Return updated cart
+    items = get_cart_items(current_user["id"])
+    total = sum(item["price"] * item["quantity"] for item in items)
+    items_count = sum(item["quantity"] for item in items)
+    
+    return {
+        "message": "Cart updated successfully",
+        "items": items,
+        "total": total,
+        "items_count": items_count
+    }
+
+@app.delete("/api/cart/remove")
+async def remove_cart_item(item: CartItemRemove, current_user: dict = Depends(get_current_user)):
+    """Remove item from cart"""
+    success = remove_from_cart(current_user["id"], item.product_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to remove item from cart")
+    
+    # Return updated cart
+    items = get_cart_items(current_user["id"])
+    total = sum(item["price"] * item["quantity"] for item in items)
+    items_count = sum(item["quantity"] for item in items)
+    
+    return {
+        "message": "Item removed from cart successfully",
+        "items": items,
+        "total": total,
+        "items_count": items_count
+    }
+
+@app.delete("/api/cart/clear")
+async def clear_user_cart(current_user: dict = Depends(get_current_user)):
+    """Clear user's cart"""
+    success = clear_cart(current_user["id"])
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to clear cart")
+    
+    return {
+        "message": "Cart cleared successfully",
+        "items": [],
+        "total": 0.0,
+        "items_count": 0
+    }
 
 @app.get("/")
 async def root():

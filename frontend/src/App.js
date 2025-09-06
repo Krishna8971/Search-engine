@@ -8,6 +8,7 @@ import Shop from './pages/Shop';
 import Cart from './pages/Cart';
 import Contact from './pages/Contact';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import './styles/global.css';
 import './App.css';
 
@@ -49,9 +50,11 @@ const AppRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   );
 }
