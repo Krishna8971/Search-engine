@@ -3,19 +3,23 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Shop from './pages/Shop';
+import Cart from './pages/Cart';
+import Contact from './pages/Contact';
 import './styles/global.css';
 import './App.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'login', 'register', 'dashboard'
+  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'login', 'register', 'dashboard', 'shop', 'cart', 'contact'
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
       setIsAuthenticated(true);
-      setCurrentPage('dashboard');
+      setCurrentPage('home');
     } else {
       setCurrentPage('home');
     }
@@ -24,7 +28,8 @@ function App() {
 
   const handleLoginSuccess = (data) => {
     setIsAuthenticated(true);
-    setCurrentPage('dashboard');
+    setCurrentPage('home');
+    // You might want to fetch user data here
   };
 
   const handleRegisterSuccess = (data) => {
@@ -33,6 +38,7 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setUser(null);
     setCurrentPage('home');
   };
 
@@ -46,6 +52,10 @@ function App() {
 
   const handleBackToLogin = () => {
     setCurrentPage('login');
+  };
+
+  const handleNavigation = (page) => {
+    setCurrentPage(page);
   };
 
   if (loading) {
@@ -62,7 +72,14 @@ function App() {
   // Show different pages based on current state
   switch (currentPage) {
     case 'home':
-      return <Home onLoginClick={handleLoginClick} />;
+      return (
+        <Home 
+          onLoginClick={handleLoginClick} 
+          isAuthenticated={isAuthenticated} 
+          user={user}
+          onNavigation={handleNavigation}
+        />
+      );
     
     case 'login':
       return (
@@ -70,6 +87,9 @@ function App() {
           onToggleMode={handleRegisterClick}
           onLoginSuccess={handleLoginSuccess}
           onBackToHome={() => setCurrentPage('home')}
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onNavigation={handleNavigation}
         />
       );
     
@@ -79,14 +99,57 @@ function App() {
           onToggleMode={handleBackToLogin}
           onRegisterSuccess={handleRegisterSuccess}
           onBackToHome={() => setCurrentPage('home')}
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onNavigation={handleNavigation}
         />
       );
     
     case 'dashboard':
       return <Dashboard onLogout={handleLogout} />;
     
+    case 'shop':
+      return (
+        <Shop 
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onLoginClick={handleLoginClick}
+          onLogout={handleLogout}
+          onNavigation={handleNavigation}
+        />
+      );
+    
+    case 'cart':
+      return (
+        <Cart 
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onLoginClick={handleLoginClick}
+          onLogout={handleLogout}
+          onNavigation={handleNavigation}
+        />
+      );
+    
+    case 'contact':
+      return (
+        <Contact 
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onLoginClick={handleLoginClick}
+          onLogout={handleLogout}
+          onNavigation={handleNavigation}
+        />
+      );
+    
     default:
-      return <Home onLoginClick={handleLoginClick} />;
+      return (
+        <Home 
+          onLoginClick={handleLoginClick} 
+          isAuthenticated={isAuthenticated} 
+          user={user}
+          onNavigation={handleNavigation}
+        />
+      );
   }
 }
 

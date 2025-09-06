@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/global.css';
 import '../styles/auth.css';
 
-const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome }) => {
+const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome, isAuthenticated, user, onNavigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -118,8 +120,10 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome }) => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
+      <Header onLoginClick={() => {}} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
+      <div className="auth-container">
+        <div className="auth-card">
         <div className="auth-header">
           <h1 className="auth-title">Join SecondMarket</h1>
           <p className="auth-subtitle">Create your account to start buying and selling second-hand items</p>
@@ -241,6 +245,8 @@ const Register = ({ onToggleMode, onRegisterSuccess, onBackToHome }) => {
           )}
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

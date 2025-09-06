@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
-const Shop = () => {
+const Shop = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
   // Sample product data
   const [products] = useState([
     {
@@ -86,6 +88,8 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+      
       {/* Header Section */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,6 +162,7 @@ const Shop = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

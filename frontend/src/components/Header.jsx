@@ -1,71 +1,152 @@
 import React from 'react';
+import '../styles/global.css';
 
-const Header = () => {
+const Header = ({ onLoginClick, onLogout, isAuthenticated, user, onNavigation }) => {
   return (
-    <header className="bg-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo Placeholder */}
-          <div className="flex-shrink-0">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-gray-800">ShopApp</span>
-            </div>
+    <header style={{
+      backgroundColor: 'var(--surface-color)',
+      borderBottom: '1px solid var(--border-color)',
+      padding: 'var(--spacing-md) 0',
+      boxShadow: 'var(--shadow-md)'
+    }}>
+      <div className="container" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        {/* Logo */}
+        <div 
+          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          onClick={() => onNavigation && onNavigation('home')}
+        >
+          <div style={{
+            width: '32px',
+            height: '32px',
+            backgroundColor: 'var(--primary-color)',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 'var(--spacing-sm)'
+          }}>
+            <span style={{ color: 'white', fontWeight: 'bold', fontSize: 'var(--font-size-lg)' }}>S</span>
           </div>
+          <span style={{ 
+            fontSize: 'var(--font-size-xl)', 
+            fontWeight: 'bold', 
+            color: 'var(--primary-color)' 
+          }}>
+            SecondMarket
+          </span>
+        </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <a
-                href="#home"
-                className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Home
-              </a>
-              <a
-                href="#shop"
-                className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Shop
-              </a>
-              <a
-                href="#cart"
-                className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Cart
-              </a>
-              <a
-                href="#contact"
-                className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Contact
-              </a>
-            </div>
-          </nav>
+        {/* Navigation Links */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+          <button
+            onClick={() => onNavigation && onNavigation('home')}
+            style={{
+              color: 'var(--text-secondary)',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--primary-color)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Home
+          </button>
+          <button
+            onClick={() => onNavigation && onNavigation('shop')}
+            style={{
+              color: 'var(--text-secondary)',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--primary-color)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Shop
+          </button>
+          <button
+            onClick={() => onNavigation && onNavigation('cart')}
+            style={{
+              color: 'var(--text-secondary)',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--primary-color)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Cart
+          </button>
+          <button
+            onClick={() => onNavigation && onNavigation('contact')}
+            style={{
+              color: 'var(--text-secondary)',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--primary-color)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--text-secondary)'}
+          >
+            Contact
+          </button>
+        </nav>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+        {/* User Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+          {isAuthenticated ? (
+            <>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                Welcome, {user?.name}
+              </span>
+              <button
+                onClick={() => onNavigation && onNavigation('dashboard')}
+                className="btn btn-primary"
+                style={{ fontSize: 'var(--font-size-sm)' }}
+              >
+                Profile
+              </button>
+              <button
+                onClick={onLogout}
+                className="btn btn-secondary"
+                style={{ fontSize: 'var(--font-size-sm)' }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
             <button
-              type="button"
-              className="bg-gray-50 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              onClick={onLoginClick}
+              className="btn btn-primary"
+              style={{ fontSize: 'var(--font-size-sm)' }}
             >
-              <svg
-                className="h-6 w-6"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              Login
             </button>
-          </div>
+          )}
         </div>
       </div>
     </header>

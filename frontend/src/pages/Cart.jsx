@@ -1,8 +1,12 @@
 import React from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
-const Cart = () => {
+const Cart = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+      
       {/* Header Section */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -111,6 +115,7 @@ const Cart = () => {
           </button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

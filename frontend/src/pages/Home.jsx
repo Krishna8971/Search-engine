@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/global.css';
 
-const Home = ({ onLoginClick }) => {
+const Home = ({ onLoginClick, isAuthenticated, user, onNavigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -14,26 +16,7 @@ const Home = ({ onLoginClick }) => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      {/* Header */}
-      <header style={{
-        backgroundColor: 'var(--surface-color)',
-        borderBottom: '1px solid var(--border-color)',
-        padding: 'var(--spacing-md) 0'
-      }}>
-        <div className="container flex justify-between items-center">
-          <h1 style={{ margin: 0, color: 'var(--primary-color)', fontSize: 'var(--font-size-xl)' }}>
-            SecondMarket
-          </h1>
-          <div className="flex items-center" style={{ gap: 'var(--spacing-md)' }}>
-            <button 
-              className="btn btn-secondary"
-              onClick={onLoginClick}
-            >
-              Login
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header onLoginClick={onLoginClick} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
 
       {/* Hero Section */}
       <section style={{
@@ -377,17 +360,7 @@ const Home = ({ onLoginClick }) => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{
-        backgroundColor: 'var(--surface-dark)',
-        color: 'var(--text-secondary)',
-        padding: 'var(--spacing-xl) 0',
-        textAlign: 'center'
-      }}>
-        <div className="container">
-          <p>&copy; 2025 SecondMarket. Your trusted second-hand marketplace.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
-const Contact = () => {
+const Contact = ({ isAuthenticated, user, onLoginClick, onLogout, onNavigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,6 +34,8 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header isAuthenticated={isAuthenticated} user={user} onLoginClick={onLoginClick} onLogout={onLogout} onNavigation={onNavigation} />
+      
       {/* Header Section */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -197,6 +201,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

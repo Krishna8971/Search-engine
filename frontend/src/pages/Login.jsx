@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/global.css';
 import '../styles/auth.css';
 
-const Login = ({ onToggleMode, onLoginSuccess, onBackToHome }) => {
+const Login = ({ onToggleMode, onLoginSuccess, onBackToHome, isAuthenticated, user, onNavigation }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -88,8 +90,10 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome }) => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
+      <Header onLoginClick={() => {}} isAuthenticated={isAuthenticated} user={user} onNavigation={onNavigation} />
+      <div className="auth-container">
+        <div className="auth-card">
         <div className="auth-header">
           <h1 className="auth-title">Welcome Back to SecondMarket</h1>
           <p className="auth-subtitle">Sign in to your account to start buying and selling</p>
@@ -177,6 +181,8 @@ const Login = ({ onToggleMode, onLoginSuccess, onBackToHome }) => {
           )}
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../styles/global.css';
 
 const Dashboard = ({ onLogout }) => {
@@ -71,22 +73,7 @@ const Dashboard = ({ onLogout }) => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background-color)' }}>
-      {/* Header */}
-      <header style={{
-        backgroundColor: 'var(--surface-color)',
-        borderBottom: '1px solid var(--border-color)',
-        padding: 'var(--spacing-md) 0'
-      }}>
-        <div className="container flex justify-between items-center">
-          <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>SecondMarket</h1>
-          <div className="flex items-center" style={{ gap: 'var(--spacing-md)' }}>
-            <span className="text-secondary">Welcome, {user?.name}</span>
-            <button className="btn btn-secondary" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header onLogout={handleLogout} isAuthenticated={true} user={user} />
 
       {/* Main Content */}
       <main className="container" style={{ padding: 'var(--spacing-2xl) var(--spacing-md)' }}>
@@ -207,6 +194,7 @@ const Dashboard = ({ onLogout }) => {
           </p>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
